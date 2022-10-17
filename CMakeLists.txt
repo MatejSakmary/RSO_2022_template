@@ -5,7 +5,7 @@ project(RSO_2022_Template)
 set(OpenGl_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
 
-add_executable((${PROJECT_NAME} 
+add_executable(${PROJECT_NAME} 
 	"src/demorso.cpp"
 )
 
