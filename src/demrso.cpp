@@ -259,7 +259,6 @@ struct Ray
 };
 
 class Intersectable;
-
 // Structure to store the result of ray tracing
 struct Hit
 {

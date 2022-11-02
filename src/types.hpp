@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <glm/glm.hpp>
 
 using u8 = std::uint8_t;
 using u16 = std::uint16_t;
@@ -16,3 +17,22 @@ using isize = std::ptrdiff_t;
 
 using f32 = float;
 using f64 = double;
+
+using f32vec2 = glm::vec2;
+using f32vec3 = glm::vec3;
+using f32vec4 = glm::vec4;
+
+using f64vec2 = glm::dvec2;
+using f64vec3 = glm::dvec3;
+using f64vec4 = glm::dvec4;
+
+struct Ray
+{
+    f64vec3 start = {0.0, 0.0, 0.0};
+    f64vec3 direction = {0.0, 0.0, 0.0};
+
+    Ray(const f64vec3 & start, const f64vec3 & direction) :
+        start{start}, direction{glm::normalize(direction)} 
+    {
+    }
+};
