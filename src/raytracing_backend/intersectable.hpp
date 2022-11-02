@@ -18,7 +18,7 @@ struct Intersectable
     const Material* material;
     f64vec3 origin;
 
-    virtual IntersectInfo intersect(const Ray & ray) = 0;
+    virtual auto intersect(const Ray & ray) -> IntersectInfo = 0;
 
     protected:
         Intersectable(const Material * material, const f64vec3 & origin) : 
@@ -39,7 +39,7 @@ struct Rectangle : public Intersectable
     f64vec2 dimensions;
 
     Rectangle(const RectangleGeometryInfo & info, const Material* material);
-    IntersectInfo intersect(const Ray & ray) override;
+    auto intersect(const Ray & ray) -> IntersectInfo override;
 };
 
 struct Sphere : public Intersectable
@@ -52,5 +52,5 @@ struct Sphere : public Intersectable
     f64 radius;
 
     Sphere(const SphereGeometryInfo & info, const Material* material);
-    IntersectInfo intersect(const Ray & ray) override;
+    auto intersect(const Ray & ray) -> IntersectInfo override;
 };

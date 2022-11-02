@@ -36,3 +36,5 @@ struct Ray
     {
     }
 };
+
+const f64 EPSILON = 1.0e-9;
