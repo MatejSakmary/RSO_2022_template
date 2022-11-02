@@ -6,19 +6,6 @@
 #include <vector>
 #include <iostream>
 
-// #if defined(__APPLE__)
-// #include <OpenGL/gl.h>
-// #include <OpenGL/glu.h>
-// #include <GLUT/glut.h>
-// #else
-// #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
-// #include <windows.h>
-// #endif
-// #include <GL/gl.h>
-// #include <GL/glu.h>
-// #include <GL/glut.h>
-// #endif
-
 #include <GLFW/glfw3.h>
 
 // Pseudocolor mapping of a scalar value
@@ -82,8 +69,8 @@ const Show showFlag = WEIGHT_PSEUDOCOLOR;
 // The cost of sampling - should be measured and set
 double costBRDF = 1.0, costLight = 1.0, referenceEfficiency = 1.0;
 
-int nIterations = 2;    // how many iterations to render
-int nTotalSamples = 50; // samples in one render iteration - should be even number
+int nIterations = 10;    // how many iterations to render
+int nTotalSamples = 500; // samples in one render iteration - should be even number
 
 // Compute random number in range [0,1], uniform distribution
 double drandom() { return (double)rand() / RAND_MAX; }
@@ -169,13 +156,77 @@ struct Material
     { // output - the incoming light direction
         // To be implemented during exercise 1
         L = vec3(0, 0, 0);
+        double e1 = drandom();
+        double e2 = drandom();
+
+        double avgSpecAlbedo = specularAlbedo.average();
+        double avgDiffAlbedo = diffuseAlbedo.average();
+
+        if(e1 < avgDiffAlbedo)
+        {
+            double length = sqrt(N.x * N.x + N.y * N.y);
+            vec3 T;
+            if (abs(N.x) > epsilon && abs(N.y) > epsilon)
+            {
+                T = vec3(N.y / length, -N.x / length, 0.0f);
+            } else if (abs(N.y) > epsilon)
+            {
+                double length = sqrt(N.y * N.y + N.z * N.z);
+                T = vec3(0.0f, -N.z / length, N.y / length);
+            } else 
+            {
+                double length = sqrt(N.x * N.x + N.z * N.z);
+                T = vec3(-N.z / length, 0.0f, N.x / length);
+            }
+
+            vec3 B = cross(N, T);
+            e1 = e1/ avgDiffAlbedo;
+
+            double sqrt_e1 = sqrt(1.0 - e1);
+            double x = sqrt_e1 * cos(2 * M_PI * e2);
+            double y = sqrt_e1 * sin(2 * M_PI * e2);
+            double z = sqrt(e1);
+
+            L = T * x + B * y + N * z;
+
+            double cos_theta = dot(N, L);
+            return cos_theta >= 0.0f;
+        } else if(e1 < avgDiffAlbedo + avgSpecAlbedo)
+        {
+            vec3 R = N * (2.0 * dot(V,N)) - V;
+            vec3 B = cross(N, R);
+            vec3 T = cross(R, B);
+
+            e1 = (e1 - avgDiffAlbedo)/avgSpecAlbedo;
+
+            double sqrt_e1_pow = sqrt(1.0f - pow(e1, 2.0f / (shininess + 1.0f)));
+
+            double x = sqrt_e1_pow * cos(2 * M_PI * e2);
+            double y = sqrt_e1_pow * sin(2 * M_PI * e2);
+            double z = pow(e1, 1 / (shininess + 1.0f));
+                 
+            L = T * x + B * y + R * z;
+
+            double cosTheta = dot(N, L);
+            return cosTheta >= 0.0;
+        }
         return false; // error - no value
     }
     // Evaluate the probability given input normal, view (outgoing) direction and incoming light direction
     double sampleProb(const vec3 &N, const vec3 &V, const vec3 &L)
     {
         // To be implemented during exercise 1
-        return 0;
+        vec3 R = N * (2.0f * dot(L, N)) - L;
+        double cosAlpha = dot(V, R);
+        double cosTheta = dot(N, L);
+        if(cosTheta <= 0 || cosAlpha <= 0)
+        {
+            return 0.0f;
+        }
+        double avg_diff_albedo = diffuseAlbedo.average();
+        double avg_spec_albedo = specularAlbedo.average();
+        return (avg_diff_albedo * cosTheta / M_PI) +
+            (avg_spec_albedo * (shininess + 1) * pow(cosAlpha, shininess) / (2.0 * M_PI));
     }
 };
 
@@ -191,8 +242,8 @@ struct TableMaterial : Material
     TableMaterial(double shine)
     {
         shininess = shine;
-        diffuseAlbedo = vec3(0, 0, 0);
-        specularAlbedo = vec3(1.0, 1.0, 1.0);
+        diffuseAlbedo = vec3(0.8, 0.8, 0.8);
+        specularAlbedo = vec3(0.2, 0.2, 0.2);
     }
 };
 
@@ -400,7 +451,9 @@ public:
 enum Method
 {
     BRDF,
-    LIGHT_SOURCE
+    LIGHT_SOURCE,
+    MULTI_IMPORTANCE_SAMPLING,
+    MIS_PROB_WEIGHTS,
 } method;
 
 // The scene definition with main rendering method
@@ -471,6 +524,12 @@ public:
             errorFile = fopen("light.txt", "w");
             setWeight(1.0);
             break;
+        case MULTI_IMPORTANCE_SAMPLING:
+        case MIS_PROB_WEIGHTS:
+            nBRDFSamples = nTotalSamples / 2.0f;
+            nLightSamples = nTotalSamples / 2.0f;
+            errorFile = fopen("multiimportance.txt", "w");
+            setWeight(0.5f);
         } // switch
 
         double cost = 0;
@@ -600,9 +659,16 @@ public:
                     // The evaluation of rendering equation locally: (light power) * brdf * cos(theta)
                     vec3 f = lightSample.sphere->material->Le *
                              hit.material->BRDF(hit.normal, inDir, outDir) * cosThetaSurface;
-                    double p = pdfLightSourceSampling;
+                    double p_1 = pdfLightSourceSampling;
+                    double p_2 = pdfBRDFSampling;
                     // importance sample = 1/n . \sum (f/prob)
-                    radianceLightSourceSampling += f / p / nTotalSamples;
+                    if(method != MIS_PROB_WEIGHTS)
+                    {
+                        radianceLightSourceSampling += f / p_1 / nTotalSamples;
+                    } else {
+                        radianceLightSourceSampling += f/ (p_1 + p_2) / nTotalSamples;
+                    }
+
                 } // if
             }
         } // for all the samples from light
@@ -634,8 +700,14 @@ public:
                                 lightSource.object->pointSampleProb(totalPower) * distance2 / cosThetaLight;
                             // The evaluation of rendering equation locally: (light power) * brdf * cos(theta)
                             vec3 f = lightSource.material->Le * brdf * cosThetaSurface;
-                            double p = pdfBRDFSampling;
-                            radianceBRDFSampling += f / p / nTotalSamples;
+                            double p_1 = pdfBRDFSampling;
+                            double p_2 = pdfLightSourceSampling;
+                            if(method != MIS_PROB_WEIGHTS)
+                            {
+                                radianceBRDFSampling += f / p_1 / nTotalSamples;
+                            } else {
+                                radianceLightSourceSampling += f/ (p_1 + p_2) / nTotalSamples;
+                            }
                         }
                         else
                             printf("ERROR: Sphere hit from back\n");
@@ -825,6 +897,12 @@ void onDisplay()
     case LIGHT_SOURCE:
         ofile = fopen("lightsource.tga", "wb");
         break;
+    case MULTI_IMPORTANCE_SAMPLING:
+        ofile = fopen("multiimportance.tga", "wb");
+        break;
+    case MIS_PROB_WEIGHTS:
+        ofile = fopen("mis_prob_weight.tga", "wb");
+        break;
     }
     if (!ofile)
         return;
@@ -917,6 +995,14 @@ void processInput(GLFWwindow *window)
         method = BRDF;
         printf("BRDF sampling\n");
         scene.render();
+    } else if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
+        method = MULTI_IMPORTANCE_SAMPLING;
+        printf("Multi importance sampling\n");
+        scene.render();
+    } else if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+        method = MIS_PROB_WEIGHTS;
+        printf("Multi importance sampling with prob weights\n");
+        scene.render();
     } else if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         printf("Writing reference file\n");
         FILE *refImage = fopen("image.bin", "wb");
@@ -935,6 +1021,12 @@ void processInput(GLFWwindow *window)
             break;
         case BRDF:
             fp = fopen("brdf.hdr", "wb");
+            break;
+        case MULTI_IMPORTANCE_SAMPLING:
+            fp = fopen("multiimportance.hdr", "wb");
+            break;
+        case MIS_PROB_WEIGHTS:
+            fp = fopen("mis_prob_weights.hdr", "wb");
             break;
         }
         int width = screenWidth;
@@ -1046,7 +1138,7 @@ int main(int argc, char **argv)
 	// TODO(msakmary) Using compat profile is cursed, switch to CORE profile and 
 	// do proper implementation
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
-	GLFWwindow* window = glfwCreateWindow(2 * screenWidth, screenHeight, "SGL test app", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(2 * screenWidth, screenHeight, "RSO template app", NULL, NULL);
 	if(!window)
 	{
 		glfwTerminate();
@@ -1068,7 +1160,6 @@ int main(int argc, char **argv)
 		processInput(window);
         onDisplay();
 
-		// swap buffers (float buffering)
 		glfwSwapBuffers(window);
 	}
 
