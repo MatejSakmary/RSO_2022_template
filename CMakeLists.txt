@@ -2,11 +2,12 @@ cmake_minimum_required(VERSION 3.8)
 
 project(RSO_2022_Template)
 
-set(OpenGl_GL_PREFERENCE GLVND)
+set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
 
 add_executable(${PROJECT_NAME} 
-	"src/demorso.cpp"
+	"src/application.cpp"
+	"src/main.cpp"
 )
 
 target_include_directories(${PROJECT_NAME}
