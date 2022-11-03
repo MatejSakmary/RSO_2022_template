@@ -11,6 +11,8 @@ add_executable(${PROJECT_NAME}
 	"src/raytracing_backend/material.cpp"
 	"src/raytracing_backend/scene.cpp"
 	"src/raytracing_backend/intersectable.cpp"
+	"src/raytracing_backend/raytracer.cpp"
+	"src/raytracing_backend/camera.cpp"
 )
 
 target_include_directories(${PROJECT_NAME}

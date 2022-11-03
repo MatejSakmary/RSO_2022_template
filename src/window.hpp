@@ -35,10 +35,12 @@ struct AppWindow
         AppWindow(u32 width, u32 height, WindowVTable callbacks) : v_table{callbacks}
         {
             glfwInit();
-            /* Tell GLFW to not create OpenGL context */
-            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
             glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
             window = glfwCreateWindow(width, height, "Vulkan", nullptr, nullptr);
+            glfwMakeContextCurrent(window);
             glfwSetWindowUserPointer(window, &v_table);
             glfwSetCursorPosCallback( 
                 window,
@@ -78,6 +80,7 @@ struct AppWindow
         void set_window_close() { glfwSetWindowShouldClose(window, true); }
         void set_input_mode(i32 mode, i32 value) { glfwSetInputMode(window, mode, value); }
         bool get_window_should_close() { return glfwWindowShouldClose(window); }
+        void swap_buffers() { glfwSwapBuffers(window); }
 
         ~AppWindow()
         {

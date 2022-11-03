@@ -26,6 +26,10 @@ using f64vec2 = glm::dvec2;
 using f64vec3 = glm::dvec3;
 using f64vec4 = glm::dvec4;
 
+using u32vec2 = glm::uvec2;
+using u32vec3 = glm::uvec3;
+using u32vec4 = glm::uvec4;
+
 struct Ray
 {
     f64vec3 start = {0.0, 0.0, 0.0};
