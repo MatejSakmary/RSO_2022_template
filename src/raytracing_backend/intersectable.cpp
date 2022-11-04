@@ -1,6 +1,5 @@
 #include "intersectable.hpp"
 
-
 ////////////////////////////////////////////////////////////////////////////
 //                                RECTANGLE                               //
 ////////////////////////////////////////////////////////////////////////////
@@ -43,6 +42,20 @@ auto Rectangle::intersect(const Ray & ray) const -> HitInfo
     };
 }
 
+auto Rectangle::uniformly_sample_point(const f64vec3 & illuminated_point) const -> std::pair<f64vec3, f64vec3>
+{
+    throw std::runtime_error("[Rectangle::uniformly_sample_point()] Rectangles as light sources are not yet supported");
+}
+
+auto Rectangle::sampled_point_probability(f64 total_power) const -> f64
+{
+    throw std::runtime_error("[Rectangle::sampled_point_probablity()] Rectangles as light sources are not yet supported");
+}
+
+auto Rectangle::get_power_from_material() const -> f64
+{
+    return 0.0;
+}
 ////////////////////////////////////////////////////////////////////////////
 //                                SPHERE                                  //
 ////////////////////////////////////////////////////////////////////////////
@@ -81,3 +94,26 @@ auto Sphere::intersect(const Ray & ray) const -> HitInfo
         .intersectable = this
     };
 };
+
+auto Sphere::uniformly_sample_point(const f64vec3 & illuminated_point) const -> std::pair<f64vec3, f64vec3>
+{
+    f64vec3 normal = {0.0, 0.0, 0.0};
+    do
+    {
+        normal = {get_random_double() * 2.0 - 1.0, get_random_double() * 2.0 - 1.0, get_random_double() * 2.0 - 1.0};
+        if(glm::dot(illuminated_point - origin, normal) < 0.0) { continue; }
+    } while (dot(normal, normal) > 1.0);
+
+    normal = glm::normalize(normal);
+    return {origin + normal * radius, normal};
+}
+
+auto Sphere::sampled_point_probability(f64 total_power) const -> f64
+{
+    return get_power_from_material() / total_power / (4.0 * radius * radius * M_PI);
+}
+
+auto Sphere::get_power_from_material() const -> f64
+{
+    return material->get_average_emmited_radiance() * (4.0 * radius * radius * M_PI) * M_PI;
+}

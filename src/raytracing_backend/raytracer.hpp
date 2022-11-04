@@ -9,6 +9,12 @@ enum TraceMethod
     LIGHT_SOURCE
 };
 
+struct LightSourceSample
+{
+    Intersectable * object;
+    f64vec3 point;
+    f64vec3 normal;
+};
 
 struct Raytracer
 {
@@ -24,6 +30,12 @@ struct Raytracer
         f64 R = 0.0;
         f64 G = 0.0;
         f64 B = 0.0;
+
+        Pixel() = default;
+        Pixel(const f64 & R, const f64 & G, const f64 & B) : R{R}, G{G}, B{B} {}
+        explicit Pixel(const f64vec3 & color) : R{color.r}, G{color.g}, B{color.b} {}
+        Pixel operator *(const f64 val) { f64vec3 tmp{R, G, B}; return static_cast<Pixel>(tmp * val); }
+        Pixel operator +(const Pixel & other) { return { R + other.R, G + other.G, B + other.B }; }
     };
 
     std::vector<Pixel> result_image;
@@ -40,6 +52,7 @@ struct Raytracer
         // TODO(msakmary) think of a way to store active scene better
         const Scene * active_scene;
 
-        auto trace_ray(const Ray & ray) -> Pixel;
-        auto closest_hit(const Ray & ray) -> HitInfo;
+        auto ray_gen(const Ray & ray, const TraceInfo & info) -> Pixel;
+        auto trace_ray(const Ray & ray) -> HitInfo;
+        auto generate_lightsource_sample(const HitInfo & hit) -> LightSourceSample;
 };

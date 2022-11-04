@@ -8,6 +8,7 @@ find_package(OpenGL REQUIRED)
 add_executable(${PROJECT_NAME} 
 	"src/main.cpp"
 	"src/application.cpp"
+	"src/utils.cpp"
 	"src/raytracing_backend/material.cpp"
 	"src/raytracing_backend/scene.cpp"
 	"src/raytracing_backend/intersectable.cpp"

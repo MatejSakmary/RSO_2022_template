@@ -1,7 +1,18 @@
 #include "scene.hpp"
 
-Scene::Scene(const Camera & camera) : camera{camera}
+#include <iostream>
+
+Scene::Scene(const Camera & camera) : camera{camera}, total_power{0.0}
 {
+}
+void Scene::calculate_total_power()
+{
+    total_power = 0.0;
+    for(const auto & object : scene_objects)
+    {
+        total_power += object->get_power_from_material();
+    }
+    std::cout << "total scene power : " << total_power << std::endl;
 }
 
 void Scene::load_scene_from_file()

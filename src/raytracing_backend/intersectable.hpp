@@ -1,7 +1,11 @@
 #pragma once
 
+#include <stdexcept>
+#include <utility>
+
 #include "types.hpp"
 #include "material.hpp"
+#include "utils.hpp"
 
 struct Intersectable;
 
@@ -19,6 +23,9 @@ struct Intersectable
     f64vec3 origin;
 
     virtual auto intersect(const Ray & ray) const -> HitInfo = 0;
+    virtual auto uniformly_sample_point(const f64vec3 & illuminated_point) const -> std::pair<f64vec3, f64vec3> = 0;
+    virtual auto sampled_point_probability(f64 total_power) const -> f64 = 0;
+    virtual auto get_power_from_material() const -> f64 = 0;
 
     protected:
         Intersectable(const Material * material, const f64vec3 & origin) : 
@@ -40,6 +47,9 @@ struct Rectangle : public Intersectable
 
     Rectangle(const RectangleGeometryInfo & info, const Material* material);
     auto intersect(const Ray & ray) const -> HitInfo override;
+    auto uniformly_sample_point(const f64vec3 & illuminated_point) const -> std::pair<f64vec3, f64vec3> override;
+    auto sampled_point_probability(f64 total_power) const -> f64 override;
+    auto get_power_from_material() const -> f64 override;
 };
 
 struct Sphere : public Intersectable
@@ -53,4 +63,7 @@ struct Sphere : public Intersectable
 
     Sphere(const SphereGeometryInfo & info, const Material* material);
     auto intersect(const Ray & ray) const -> HitInfo override;
+    auto uniformly_sample_point(const f64vec3 & illuminated_point) const -> std::pair<f64vec3, f64vec3> override;
+    auto sampled_point_probability(f64 total_power) const -> f64 override;
+    auto get_power_from_material() const -> f64;
 };

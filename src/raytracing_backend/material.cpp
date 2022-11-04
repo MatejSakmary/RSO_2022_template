@@ -8,7 +8,7 @@ Material::Material(const MaterialCreateInfo & info) :
 {
 }
 
-auto Material::BRDF(const MaterialEvalInfo & info) -> f64vec3
+auto Material::BRDF(const MaterialEvalInfo & info) const -> f64vec3
 {
     f64 cos_theta_light = glm::dot(info.normal, info.light_direction);
     f64 cos_theta_view = glm::dot(info.normal, info.view_direction);
@@ -22,17 +22,17 @@ auto Material::BRDF(const MaterialEvalInfo & info) -> f64vec3
     if(cos_phi <= 0.0) { return brdf; }
 
     // Max-Phong specular BRDF : symmetric and energy conserving
-    return brdf + ((shininess + 1.0) / 2.0 / M_PI * pow(cos_phi, shininess) / glm::max(cos_theta_light, cos_theta_view));
+    return brdf + specular_albedo * ((shininess + 1.0) / 2.0 / M_PI * pow(cos_phi, shininess) / glm::max(cos_theta_light, cos_theta_view));
 }
 
 // TODO(excercise 1)
-auto Material::sample_probability(MaterialEvalInfo & info) -> f64
+auto Material::sample_probability(const MaterialEvalInfo & info) const -> f64
 {
     return 0.0;
 }
 
 // TODO(excercise 1)
-auto Material::sample_direction(const f64vec3 & normal, const f64vec3 & view_direction) -> std::optional<f64vec3>
+auto Material::sample_direction(const f64vec3 & normal, const f64vec3 & view_direction) const -> std::optional<f64vec3>
 {
     return {};
 }
