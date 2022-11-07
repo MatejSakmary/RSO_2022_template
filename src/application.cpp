@@ -125,6 +125,9 @@ Scene Application::create_default_scene()
 
 void Application::run_loop()
 {
+    
+    std::vector<float> exr_img;
+    load_exr_image("assets/textures/EM/raw001.exr", exr_img);
     while(!window.get_window_should_close())
     {
         glfwPollEvents();
@@ -135,7 +138,7 @@ void Application::run_loop()
             img.at(i * 3 + 1) = raytracer.result_image.at(i).G;
             img.at(i * 3 + 2) = raytracer.result_image.at(i).B;
         }
-        glDrawPixels(WINDOW_DIMENSIONS.x, WINDOW_DIMENSIONS.y, GL_RGB, GL_FLOAT, img.data());
+        glDrawPixels(WINDOW_DIMENSIONS.x, WINDOW_DIMENSIONS.y, GL_RGB, GL_FLOAT, exr_img.data());
         window.swap_buffers();
     }
 }

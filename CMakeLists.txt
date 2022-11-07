@@ -6,6 +6,13 @@ set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
 find_package(OpenMP REQUIRED)
 
+# TODO(msakmary) create separate cmakes in dependency subdirectories
+add_library(miniz STATIC "src/dep/miniz/miniz.c")
+
+add_library(tinyexr STATIC "src/dep/tinyexr/tinyexr.cpp")
+target_include_directories(tinyexr PRIVATE "src/dep/miniz")
+target_link_libraries(tinyexr PRIVATE miniz)
+
 add_executable(${PROJECT_NAME} 
 	"src/main.cpp"
 	"src/application.cpp"
@@ -20,6 +27,7 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
   	PRIVATE
   	"src"
+	"src/dep/tinyexr"
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
@@ -37,3 +45,4 @@ target_link_libraries(${PROJECT_NAME} OpenGL::GL)
 target_link_libraries(${PROJECT_NAME} glm::glm)
 target_link_libraries(${PROJECT_NAME} glfw)
 target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
+target_link_libraries(${PROJECT_NAME} tinyexr)

@@ -2,6 +2,7 @@
 
 #include "window.hpp"
 #include "types.hpp"
+#include "utils.hpp"
 #include "raytracing_backend/scene.hpp"
 #include "raytracing_backend/camera.hpp"
 #include "raytracing_backend/raytracer.hpp"
