@@ -4,6 +4,7 @@ project(RSO_2022_Template)
 
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
+find_package(OpenMP REQUIRED)
 
 add_executable(${PROJECT_NAME} 
 	"src/main.cpp"
@@ -35,3 +36,4 @@ add_subdirectory("src/dep/glm")
 target_link_libraries(${PROJECT_NAME} OpenGL::GL)
 target_link_libraries(${PROJECT_NAME} glm::glm)
 target_link_libraries(${PROJECT_NAME} glfw)
+target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)

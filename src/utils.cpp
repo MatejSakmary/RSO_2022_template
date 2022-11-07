@@ -5,6 +5,7 @@ static std::uniform_real_distribution distribution = std::uniform_real_distribut
 
 f64 get_random_double()
 {
+    // return (double)rand() / RAND_MAX;
     return distribution(engine);
 }
 

@@ -1,4 +1,5 @@
 #include "raytracer.hpp"
+#include <omp.h>
 
 Raytracer::Raytracer(const u32vec2 dimensions) :
     result_image{dimensions.x * dimensions.y}, 
@@ -15,9 +16,9 @@ void Raytracer::set_sample_ratio(f32 sample_ratio)
     this->sample_ratio = sample_ratio;
 }
 
-#include <iostream>
 void Raytracer::trace_scene(const Scene * scene, const TraceInfo & info)
 {
+    omp_set_num_threads(omp_get_num_procs() * 2);
     active_scene = scene;
     for(u32 iteration = 1; iteration <= info.iterations; iteration++)
     {
@@ -25,6 +26,7 @@ void Raytracer::trace_scene(const Scene * scene, const TraceInfo & info)
         for(u32 y = 0; y < dimensions.y; y++)
         {
             std::cout << "progress " << u32((f32(y)/f32(dimensions.y)) * 100.0f) << "%\r" << std::flush; 
+            #pragma omp parallel for schedule(dynamic, 20) 
             for(u32 x = 0; x < dimensions.x; x++)
             {
                 Pixel color = ray_gen(scene->camera.get_ray({x, y}, dimensions), info);

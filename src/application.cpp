@@ -3,6 +3,8 @@
 #include <functional>
 #include <iostream>
 
+#include <omp.h>
+
 void Application::mouse_pos_callback(f64 x, f64 y)
 {
     return;
@@ -67,23 +69,6 @@ Application::~Application()
 {
 }
 
-void Application::run_loop()
-{
-    while(!window.get_window_should_close())
-    {
-        glfwPollEvents();
-        std::vector<f32> img(WINDOW_DIMENSIONS.x * WINDOW_DIMENSIONS.y * 3);
-        for(size_t i = 0; i < raytracer.result_image.size(); i++)
-        {
-            img.at(i * 3) = raytracer.result_image.at(i).R;
-            img.at(i * 3 + 1) = raytracer.result_image.at(i).G;
-            img.at(i * 3 + 2) = raytracer.result_image.at(i).B;
-        }
-        glDrawPixels(WINDOW_DIMENSIONS.x, WINDOW_DIMENSIONS.y, GL_RGB, GL_FLOAT, img.data());
-        window.swap_buffers();
-    }
-}
-
 Scene Application::create_default_scene()
 {
     Scene scene = Scene(Camera::CameraInfo{
@@ -136,4 +121,21 @@ Scene Application::create_default_scene()
     scene.scene_objects.emplace_back(new Sphere({ .origin = light_center_pos + f64vec3{ 4.5, 0.0, 0.0}, .radius = 1.0}, &scene.scene_materials.at(3)));
     scene.calculate_total_power();
     return scene;
+}
+
+void Application::run_loop()
+{
+    while(!window.get_window_should_close())
+    {
+        glfwPollEvents();
+        std::vector<f32> img(WINDOW_DIMENSIONS.x * WINDOW_DIMENSIONS.y * 3);
+        for(size_t i = 0; i < raytracer.result_image.size(); i++)
+        {
+            img.at(i * 3) = raytracer.result_image.at(i).R;
+            img.at(i * 3 + 1) = raytracer.result_image.at(i).G;
+            img.at(i * 3 + 2) = raytracer.result_image.at(i).B;
+        }
+        glDrawPixels(WINDOW_DIMENSIONS.x, WINDOW_DIMENSIONS.y, GL_RGB, GL_FLOAT, img.data());
+        window.swap_buffers();
+    }
 }
