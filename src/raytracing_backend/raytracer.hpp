@@ -11,7 +11,7 @@ enum TraceMethod
 
 struct LightSourceSample
 {
-    Intersectable * object;
+    const Object & object;
     f64vec3 point;
     f64vec3 normal;
 };
@@ -24,6 +24,7 @@ struct Raytracer
         u32 iterations = 10;
         TraceMethod method = LIGHT_SOURCE;
     };
+
 
     struct Pixel
     {
@@ -46,6 +47,13 @@ struct Raytracer
     void trace_scene(const Scene * scene, const TraceInfo & info);
 
     private:
+        struct BouncedRayInfo
+        {
+            const Ray ray {{0.0, 0.0, 0.0} , {0.0, 0.0, 0.0}};
+            f64 light_sample_prob = 0.0;
+            f64 brdf_sample_prob = 0.0;
+        };
+
         std::vector<Pixel> working_image;
         f32 sample_ratio;
         u32vec2 dimensions;
@@ -53,6 +61,6 @@ struct Raytracer
         const Scene * active_scene;
 
         auto ray_gen(const Ray & ray, const TraceInfo & info) -> Pixel;
-        auto trace_ray(const Ray & ray) -> HitInfo;
-        auto generate_lightsource_sample(const HitInfo & hit) -> LightSourceSample;
+        auto trace_ray(const Ray & ray) -> Intersect::HitInfo;
+        auto bounced_ray(const Intersect::HitInfo & hit, TraceMethod method) -> BouncedRayInfo;
 };

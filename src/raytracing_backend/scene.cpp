@@ -10,7 +10,7 @@ void Scene::calculate_total_power()
     total_power = 0.0;
     for(const auto & object : scene_objects)
     {
-        total_power += object->get_power_from_material();
+        total_power += std::visit(GetPower{}, object);
     }
     std::cout << "total scene power : " << total_power << std::endl;
 }

@@ -4,13 +4,15 @@
 #include <stdexcept>
 #include <memory>
 
-#include "intersectable.hpp"
+#include "operations.hpp"
+#include "objects.hpp"
 #include "material.hpp"
 #include "camera.hpp"
+#include "types.hpp"
 
 struct Scene
 {
-    std::vector<std::unique_ptr<Intersectable>> scene_objects;
+    std::vector<Object> scene_objects;
     std::vector<Material> scene_materials;
     Camera camera;
     f64 total_power;

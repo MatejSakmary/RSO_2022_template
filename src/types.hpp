@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <variant>
 #include <glm/glm.hpp>
 
 using u8 = std::uint8_t;
@@ -42,3 +43,8 @@ struct Ray
 };
 
 const f64 EPSILON = 1.0e-9;
+
+// forward declare all object types
+struct Sphere;
+struct Rectangle;
+using Object = std::variant<Sphere, Rectangle>;

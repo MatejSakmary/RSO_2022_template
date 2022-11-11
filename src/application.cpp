@@ -2,6 +2,8 @@
 
 #include <functional>
 #include <iostream>
+#include <string>
+#include <array>
 
 #include <omp.h>
 
@@ -22,9 +24,19 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
         std::cout << "raytracing scene" << std::endl;
         raytracer.trace_scene(&scene, {
             .samples = 100,
-            .iterations = 20,
+            .iterations = 1,
             .method = TraceMethod::LIGHT_SOURCE
         });
+    }
+    else if(key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+    {
+        image_idx = (image_idx + 1) % 11;
+        load_env_map_image();
+    }
+    else if(key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+    {
+        image_idx = glm::min(11u, (image_idx - 1) % 11);
+        load_env_map_image();
     }
     return;
 }
@@ -61,12 +73,25 @@ Application::Application() :
         }
     ),
     scene{create_default_scene()},
-    raytracer{WINDOW_DIMENSIONS}
+    raytracer{WINDOW_DIMENSIONS},
+    image_idx{3}
 { 
+    load_env_map_image();
 }
 
 Application::~Application()
 {
+}
+
+void Application::load_env_map_image()
+{
+    auto path_from_index = [](int index) -> std::string
+    {
+        std::array<std::string, 11> img_num { "001", "004", "007", "010", "011", "013", "015", "016", "020", "023", "024" };
+        return "assets/textures/EM/raw" + img_num[index] + ".hdr";
+    };
+    load_hdr_image(path_from_index(image_idx), image);
+    std::cout << "[Application::load_env_map_image()] Image loaded!" << std::endl;
 }
 
 Scene Application::create_default_scene()
@@ -110,24 +135,57 @@ Scene Application::create_default_scene()
     mat_table_info.shininess = 10000.0;
     scene.scene_materials.emplace_back(mat_table_info);
     f64vec3 light_center_pos = {0, 4, -6};
-    scene.scene_objects.emplace_back( new Rectangle({ .origin = {0.0, -4.0,  2.0 }, .normal = {0.0, 0.9935, 0.1131}, .dimensions = {8.0, 1.0}}, &scene.scene_materials.at(4)));
-    scene.scene_objects.emplace_back( new Rectangle({ .origin = {0.0, -3.5, -2.0 }, .normal = {0.0, 0.9496, 0.3133}, .dimensions = {8.0, 1.0}}, &scene.scene_materials.at(5)));
-    scene.scene_objects.emplace_back( new Rectangle({ .origin = {0.0, -2.5, -6.0 }, .normal = {0.0, 0.8166, 0.5751}, .dimensions = {8.0, 1.0}}, &scene.scene_materials.at(6)));
-    scene.scene_objects.emplace_back( new Rectangle({ .origin = {0.0, -1.0, -10.0}, .normal = {0.0, 0.5400, 0.8416}, .dimensions = {8.0, 1.0}}, &scene.scene_materials.at(7)));
 
-    scene.scene_objects.emplace_back(new Sphere({ .origin = light_center_pos + f64vec3{-4.5, 0.0, 0.0}, .radius = 0.07}, &scene.scene_materials.at(0)));
-    scene.scene_objects.emplace_back(new Sphere({ .origin = light_center_pos + f64vec3{-1.5, 0.0, 0.0}, .radius = 0.16}, &scene.scene_materials.at(1)));
-    scene.scene_objects.emplace_back(new Sphere({ .origin = light_center_pos + f64vec3{ 1.5, 0.0, 0.0}, .radius = 0.4}, &scene.scene_materials.at(2)));
-    scene.scene_objects.emplace_back(new Sphere({ .origin = light_center_pos + f64vec3{ 4.5, 0.0, 0.0}, .radius = 1.0}, &scene.scene_materials.at(3)));
+    scene.scene_objects.emplace_back(Rectangle({ 
+        .material = &scene.scene_materials.at(4),
+        .origin = {0.0, -4.0,  2.0 },
+        .normal = {0.0, 0.9935, 0.1131},
+        .dimensions = {8.0, 1.0}}));
+
+    scene.scene_objects.emplace_back(Rectangle({ 
+        .material = &scene.scene_materials.at(5),
+        .origin = {0.0, -3.5, -2.0},
+        .normal = {0.0, 0.9496, 0.3133},
+        .dimensions = {8.0, 1.0}}));
+
+    scene.scene_objects.emplace_back(Rectangle({
+        .material = &scene.scene_materials.at(6),
+        .origin = {0.0, -2.5, -6.0},
+        .normal = {0.0, 0.8166, 0.5751},
+        .dimensions = {8.0, 1.0}}));
+
+    scene.scene_objects.emplace_back(Rectangle({
+        .material = &scene.scene_materials.at(7),
+        .origin = {0.0, -1.0, -10.0},
+        .normal = {0.0, 0.5400, 0.8416},
+        .dimensions = {8.0, 1.0}}));
+
+    scene.scene_objects.emplace_back(Sphere({
+        .material = &scene.scene_materials.at(0), 
+        .origin = light_center_pos + f64vec3{-4.5, 0.0, 0.0},
+        .radius = 0.07}));
+
+    scene.scene_objects.emplace_back(Sphere({
+        .material = &scene.scene_materials.at(1),
+        .origin = light_center_pos + f64vec3{-1.5, 0.0, 0.0},
+        .radius = 0.16}));
+
+    scene.scene_objects.emplace_back(Sphere({
+        .material = &scene.scene_materials.at(2),
+        .origin = light_center_pos + f64vec3{ 1.5, 0.0, 0.0},
+        .radius = 0.4}));
+
+    scene.scene_objects.emplace_back(Sphere({
+        .material = &scene.scene_materials.at(3), 
+        .origin = light_center_pos + f64vec3{ 4.5, 0.0, 0.0},
+        .radius = 1.0}));
+
     scene.calculate_total_power();
     return scene;
 }
 
 void Application::run_loop()
 {
-    
-    std::vector<float> exr_img;
-    load_exr_image("assets/textures/EM/raw001.exr", exr_img);
     while(!window.get_window_should_close())
     {
         glfwPollEvents();
@@ -138,7 +196,7 @@ void Application::run_loop()
             img.at(i * 3 + 1) = raytracer.result_image.at(i).G;
             img.at(i * 3 + 2) = raytracer.result_image.at(i).B;
         }
-        glDrawPixels(WINDOW_DIMENSIONS.x, WINDOW_DIMENSIONS.y, GL_RGB, GL_FLOAT, exr_img.data());
+        glDrawPixels(WINDOW_DIMENSIONS.x, WINDOW_DIMENSIONS.y, GL_RGB, GL_FLOAT, img.data());
         window.swap_buffers();
     }
 }
