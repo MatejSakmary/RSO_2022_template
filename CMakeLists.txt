@@ -20,7 +20,6 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
   	PRIVATE
   	"src"
-	"src/dep/tinyexr"
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
