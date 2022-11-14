@@ -13,7 +13,7 @@
 struct Application
 {
     public:
-        const u32vec2 WINDOW_DIMENSIONS = {2105, 1050};
+        const u32vec2 WINDOW_DIMENSIONS = {1080, 720};
         Application();
         ~Application();
 
@@ -24,8 +24,8 @@ struct Application
         Scene scene;
         Raytracer raytracer;
 
-        std::vector<float> image;
         u32 image_idx;
+        bool show_env_map;
 
         void init_window();
         void mouse_pos_callback(f64 x, f64 y);

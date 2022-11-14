@@ -35,7 +35,7 @@ struct AppWindow
         AppWindow(u32 width, u32 height, WindowVTable callbacks) : v_table{callbacks}
         {
             glfwInit();
-            glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+            // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);

@@ -24,7 +24,7 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
         std::cout << "raytracing scene" << std::endl;
         raytracer.trace_scene(&scene, {
             .samples = 100,
-            .iterations = 1,
+            .iterations = 10,
             .method = TraceMethod::LIGHT_SOURCE
         });
     }
@@ -37,6 +37,10 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
     {
         image_idx = glm::min(11u, (image_idx - 1) % 11);
         load_env_map_image();
+    }
+    else if(key == GLFW_KEY_E && action == GLFW_PRESS)
+    {
+        show_env_map = !show_env_map;
     }
     return;
 }
@@ -74,7 +78,8 @@ Application::Application() :
     ),
     scene{create_default_scene()},
     raytracer{WINDOW_DIMENSIONS},
-    image_idx{3}
+    image_idx{3},
+    show_env_map{false}
 { 
     load_env_map_image();
 }
@@ -90,7 +95,7 @@ void Application::load_env_map_image()
         std::array<std::string, 11> img_num { "001", "004", "007", "010", "011", "013", "015", "016", "020", "023", "024" };
         return "assets/textures/EM/raw" + img_num[index] + ".hdr";
     };
-    load_hdr_image(path_from_index(image_idx), image);
+    load_hdr_image(path_from_index(image_idx), scene.env_map.image, scene.env_map.width, scene.env_map.height);
     std::cout << "[Application::load_env_map_image()] Image loaded!" << std::endl;
 }
 
@@ -107,14 +112,14 @@ Scene Application::create_default_scene()
         .Le = {0.0, 0.0, 0.0},
         .diffuse_albedo = {0.8, 0.8, 0.8},
         .specular_albedo = {0.2, 0.2, 0.2},
-        .shininess = {500.0}
+        .shininess = 500.0
     };
 
     Material::MaterialCreateInfo mat_light_base_info = {
         .Le = {1.0, 1.0, 1.0},
         .diffuse_albedo = {0.0, 0.0, 0.0},
         .specular_albedo = {0.0, 0.0, 0.0},
-        .shininess = {0.0}
+        .shininess = 0.0
     };
 
     scene.scene_materials.reserve(8);
@@ -196,7 +201,13 @@ void Application::run_loop()
             img.at(i * 3 + 1) = raytracer.result_image.at(i).G;
             img.at(i * 3 + 2) = raytracer.result_image.at(i).B;
         }
-        glDrawPixels(WINDOW_DIMENSIONS.x, WINDOW_DIMENSIONS.y, GL_RGB, GL_FLOAT, img.data());
+        if(show_env_map)
+        {
+            glDrawPixels(scene.env_map.width, scene.env_map.height, GL_RGB, GL_FLOAT, scene.env_map.image.data());
+        } else 
+        {
+            glDrawPixels(WINDOW_DIMENSIONS.x, WINDOW_DIMENSIONS.y, GL_RGB, GL_FLOAT, img.data());
+        }
         window.swap_buffers();
     }
 }

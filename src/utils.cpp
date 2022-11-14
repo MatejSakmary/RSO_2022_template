@@ -146,7 +146,7 @@ auto work_on_rgbe(std::vector<HDR_Pixel> & row, std::vector<float> & image) -> v
     }
 }
 
-auto load_hdr_image(const std::string & path, std::vector<float> & image) -> void
+auto load_hdr_image(const std::string & path, std::vector<float> & image, float & width, float & height) -> void
 {
     image.clear();
     char buff[200];
@@ -181,6 +181,8 @@ auto load_hdr_image(const std::string & path, std::vector<float> & image) -> voi
         hdr_file.close();
         throw std::runtime_error("[laod_hdr_image()] Invalid header info");
     }
+    width = size_x;
+    height = size_y;
 
     image.reserve(size_x * size_y * 3);
     std::vector<HDR_Pixel> row(size_x);
