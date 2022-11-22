@@ -78,7 +78,7 @@ Application::Application() :
     ),
     scene{create_default_scene()},
     raytracer{WINDOW_DIMENSIONS},
-    image_idx{3},
+    image_idx{10},
     show_env_map{false}
 { 
     load_env_map_image();
@@ -96,7 +96,8 @@ void Application::load_env_map_image()
         return "assets/textures/EM/raw" + img_num[index] + ".hdr";
     };
     load_hdr_image(path_from_index(image_idx), scene.env_map.image, scene.env_map.width, scene.env_map.height);
-    std::cout << "[Application::load_env_map_image()] Image loaded!" << std::endl;
+    scene.env_map.init();
+    std::cout << "[Application::load_env_map_image()] Image " << image_idx <<  " loaded!" << std::endl;
 }
 
 Scene Application::create_default_scene()
@@ -204,6 +205,7 @@ void Application::run_loop()
         if(show_env_map)
         {
             glDrawPixels(scene.env_map.width, scene.env_map.height, GL_RGB, GL_FLOAT, scene.env_map.image.data());
+            // glDrawPixels(scene.env_map.width, scene.env_map.height, GL_LUMINANCE, GL_FLOAT, scene.env_map.heat_map.data());
         } else 
         {
             glDrawPixels(WINDOW_DIMENSIONS.x, WINDOW_DIMENSIONS.y, GL_RGB, GL_FLOAT, img.data());

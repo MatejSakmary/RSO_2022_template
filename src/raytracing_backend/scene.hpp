@@ -14,7 +14,13 @@ struct EnvironmentMap
 {
     float height;
     float width;
+    float total_power;
     std::vector<float> image;
+    std::vector<float> lum_image;
+    std::vector<float> col_prob;
+    std::vector<float> heat_map;
+
+    void init();
 };
 
 struct Scene
