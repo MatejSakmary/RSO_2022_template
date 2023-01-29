@@ -8,7 +8,9 @@
 enum TraceMethod
 {
     BRDF,
-    LIGHT_SOURCE
+    LIGHT_SOURCE,
+    MULTI_IMPORTANCE,
+    MULTI_IMPORTANCE_WEIGHTS
 };
 
 struct GetBouncedRayInfo

@@ -39,6 +39,26 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
             .method = TraceMethod::BRDF
         });
     }
+    if(key == GLFW_KEY_M && action == GLFW_PRESS)
+    {
+        std::cout << "raytracing scene - multiimportance sampling" << std::endl;
+        raytracer.set_sample_ratio(0.5f);
+        raytracer.trace_scene(&scene, {
+            .samples = 100,
+            .iterations = 10,
+            .method = TraceMethod::MULTI_IMPORTANCE
+        });
+    }
+    if(key == GLFW_KEY_W && action == GLFW_PRESS)
+    {
+        std::cout << "raytracing scene - multiimportance weighed sampling" << std::endl;
+        raytracer.set_sample_ratio(0.5f);
+        raytracer.trace_scene(&scene, {
+            .samples = 100,
+            .iterations = 10,
+            .method = TraceMethod::MULTI_IMPORTANCE_WEIGHTS
+        });
+    }
     else if(key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
     {
         image_idx = (image_idx + 1) % 11;

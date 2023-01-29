@@ -83,7 +83,12 @@ auto Raytracer::ray_gen(const Ray & ray, const TraceInfo & info) -> Pixel
             f64vec3 f = new_hit.material->Le * 
                         hit.material->BRDF({hit.normal, -ray.direction, outgoing_info.ray.direction}) *
                         cos_theta_surface;
-            radiance_emitted += f / pdf_light_source_sampling / static_cast<f64>(info.samples);
+            if(info.method == TraceMethod::MULTI_IMPORTANCE_WEIGHTS)
+            {
+                radiance_emitted += f / (pdf_brdf_sampling + pdf_light_source_sampling) / static_cast<f64>(info.samples);
+            } else {
+                radiance_emitted += f / pdf_light_source_sampling / static_cast<f64>(info.samples);
+            }
         }
     }
 
@@ -113,11 +118,18 @@ auto Raytracer::ray_gen(const Ray & ray, const TraceInfo & info) -> Pixel
 
         const auto power_to_total_ratio = std::visit(GetPower{}, *new_hit.object) / active_scene->total_power;
         f64 light_sample_prob = power_to_total_ratio / std::visit(PointSampleProbability{new_hit.hit_position}, *new_hit.object);
+        f64 pdf_light_source_sampling = light_sample_prob * distance_square / cos_theta_light;
+        f64 pdf_brdf_sampling = outgoing_info.brdf_sample_prob;
 
         f64vec3 f = new_hit.material->Le * 
                     hit.material->BRDF({ hit.normal, -ray.direction, outgoing_info.ray.direction }) *
                     cos_theta_surface;
-        radiance_emitted += f / outgoing_info.brdf_sample_prob / static_cast<f64>(info.samples);
+        if(info.method == TraceMethod::MULTI_IMPORTANCE_WEIGHTS)
+        {
+            radiance_emitted += f / (pdf_brdf_sampling + pdf_light_source_sampling) / static_cast<f64>(info.samples);
+        } else {
+            radiance_emitted += f / pdf_brdf_sampling / static_cast<f64>(info.samples);
+        }
     }
     
     return static_cast<Pixel>(radiance_emitted);
