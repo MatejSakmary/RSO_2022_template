@@ -19,13 +19,24 @@ void Application::mouse_button_callback(i32 button, i32 action, i32 mods)
 
 void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
 {
-    if(key == GLFW_KEY_ENTER && action == GLFW_PRESS)
+    if(key == GLFW_KEY_L && action == GLFW_PRESS)
     {
-        std::cout << "raytracing scene" << std::endl;
+        std::cout << "raytracing scene - light sampling" << std::endl;
+        raytracer.set_sample_ratio(1.0f);
         raytracer.trace_scene(&scene, {
             .samples = 100,
             .iterations = 10,
             .method = TraceMethod::LIGHT_SOURCE
+        });
+    }
+    if(key == GLFW_KEY_B && action == GLFW_PRESS)
+    {
+        std::cout << "raytracing scene - brdf sampling" << std::endl;
+        raytracer.set_sample_ratio(0.0f);
+        raytracer.trace_scene(&scene, {
+            .samples = 100,
+            .iterations = 10,
+            .method = TraceMethod::BRDF
         });
     }
     else if(key == GLFW_KEY_RIGHT && action == GLFW_PRESS)

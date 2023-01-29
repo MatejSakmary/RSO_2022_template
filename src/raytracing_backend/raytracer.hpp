@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 #include "scene.hpp"
 #include "types.hpp"
 
@@ -9,11 +11,11 @@ enum TraceMethod
     LIGHT_SOURCE
 };
 
-struct LightSourceSample
+struct GetBouncedRayInfo
 {
-    const Object & object;
-    f64vec3 point;
-    f64vec3 normal;
+    const Intersect::HitInfo & hit;
+    const Ray & incoming_ray;
+    TraceMethod method;
 };
 
 struct Raytracer
@@ -49,7 +51,7 @@ struct Raytracer
     private:
         struct BouncedRayInfo
         {
-            const Ray ray {{0.0, 0.0, 0.0} , {0.0, 0.0, 0.0}};
+            Ray ray {{0.0, 0.0, 0.0} , {0.0, 0.0, 0.0}};
             f64 light_sample_prob = 0.0;
             f64 brdf_sample_prob = 0.0;
         };
@@ -62,5 +64,5 @@ struct Raytracer
 
         auto ray_gen(const Ray & ray, const TraceInfo & info) -> Pixel;
         auto trace_ray(const Ray & ray) -> Intersect::HitInfo;
-        auto bounced_ray(const Intersect::HitInfo & hit, TraceMethod method) -> BouncedRayInfo;
+        auto bounced_ray(const GetBouncedRayInfo & info) const -> std::optional<BouncedRayInfo>;
 };

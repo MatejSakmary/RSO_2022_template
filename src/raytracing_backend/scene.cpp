@@ -21,11 +21,19 @@ void EnvironmentMap::init()
             // of sphere. This than has the same area as the row in the middle of the sphere
             // thus we need to normalize by sin factor
             float norm_factor = sin(3.14159265 * uv);
-            lum_image.at(y * width + x) = ( 0.2126f * image.at((y * width + x ) * 3) +
-                                            0.7152f * image.at(((y * width + x ) * 3) + 1)+
-                                            0.0722f * image.at(((y * width + x ) * 3) + 2)) * norm_factor;
-            total_power += lum_image.at(y * width + x);
-            total_col_intensity += lum_image.at(y * width + x);
+
+            int a = y * width;
+            int b = a + x;
+            int c = b * 3;
+            int idx = (y * width + x) * 3;
+            if(c != idx)
+            {
+                //std::cout << "(y * width + x) * 3 where y: " << y << " width: " << width << " x: " << x << " results in " << idx << std::endl;
+            }
+
+            lum_image.at(b) = ( 0.2126f * image.at(c) + 0.7152f * image.at(c + 1) + 0.0722f * image.at(c + 2)) * norm_factor;
+            total_power += lum_image.at(b);
+            total_col_intensity += lum_image.at(b);
         }
         col_prob.at(x) = total_col_intensity;
     }

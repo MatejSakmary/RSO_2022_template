@@ -3,6 +3,7 @@
 #include <optional>
 #include <iostream>
 #include "types.hpp"
+#include "utils.hpp"
 
 struct Material
 {

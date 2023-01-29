@@ -14,6 +14,7 @@ struct Intersect
         f64vec3 hit_position = {0.0, 0.0, 0.0};
         f64vec3 normal = {0.0, 0.0, 0.0};
         const Material * material = nullptr;
+        const Object * object = nullptr;
     };
 
     Intersect(const Ray & ray) : ray{ray} {}
