@@ -96,7 +96,7 @@ auto Raytracer::ray_gen(const Ray & ray, const TraceInfo & info) -> Pixel
             .method = TraceMethod::BRDF
         });
 
-        if(!outgoing_info_opt.has_value()) {continue;}
+        if(!outgoing_info_opt.has_value()) { continue;}
         const auto outgoing_info = outgoing_info_opt.value();
 
         f64 cos_theta_surface = glm::dot(hit.normal, outgoing_info.ray.direction);
@@ -117,7 +117,6 @@ auto Raytracer::ray_gen(const Ray & ray, const TraceInfo & info) -> Pixel
         f64vec3 f = new_hit.material->Le * 
                     hit.material->BRDF({ hit.normal, -ray.direction, outgoing_info.ray.direction }) *
                     cos_theta_surface;
-
         radiance_emitted += f / outgoing_info.brdf_sample_prob / static_cast<f64>(info.samples);
     }
     
@@ -139,7 +138,7 @@ auto Raytracer::bounced_ray(const GetBouncedRayInfo & info) const -> std::option
                 {
                     const auto light_sample = std::visit(VisiblePoint{info.hit.hit_position}, object );
                     const auto power_to_total_ratio = std::visit(GetPower{}, object) / active_scene->total_power;
-                    const Ray bounced_ray = Ray(info.hit.hit_position, light_sample.sample - info.hit.hit_position);
+                    const Ray bounced_ray = Ray(info.hit.hit_position + 0.01 * info.hit.normal, light_sample.sample - info.hit.hit_position);
 
                     const f64 brdf_probability = info.hit.material->sample_probability({
                         .normal = info.hit.normal,

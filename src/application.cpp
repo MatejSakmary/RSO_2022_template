@@ -92,7 +92,7 @@ Application::Application() :
     image_idx{10},
     show_env_map{false}
 { 
-    load_env_map_image();
+    // load_env_map_image();
 }
 
 Application::~Application()

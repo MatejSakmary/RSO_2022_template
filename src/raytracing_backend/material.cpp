@@ -55,15 +55,15 @@ auto Material::sample_direction(const f64vec3 & normal, const f64vec3 & view_dir
         f64vec3 T;
         if (glm::abs(normal.x) > EPSILON && glm::abs(normal.y) > EPSILON)
         {
-            T = f64vec3(normal.y / length, -normal.x / length, 0.0f);
+            T = f64vec3(normal.y / length, -normal.x / length, 0.0);
         } else if (glm::abs(normal.y) > EPSILON)
         {
-            double length = glm::sqrt(normal.y * normal.y + normal.z * normal.z);
-            T = f64vec3(0.0f, -normal.z / length, normal.y / length);
+            f64 length = glm::sqrt(normal.y * normal.y + normal.z * normal.z);
+            T = f64vec3(0.0, -normal.z / length, normal.y / length);
         } else 
         {
-            double length = glm::sqrt(normal.x * normal.x + normal.z * normal.z);
-            T = f64vec3(-normal.z / length, 0.0f, normal.x / length);
+            f64 length = glm::sqrt(normal.x * normal.x + normal.z * normal.z);
+            T = f64vec3(-normal.z / length, 0.0, normal.x / length);
         }
 
         f64vec3 B = glm::cross(normal, T);

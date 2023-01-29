@@ -30,9 +30,7 @@ struct Material
 
     Material(const MaterialCreateInfo & info);
     auto BRDF(const MaterialEvalInfo & info) const -> f64vec3;
-    // TODO: excercise 1
     auto sample_probability(const MaterialEvalInfo & info) const -> f64;
-    // TODO: excercise 1
     auto sample_direction(const f64vec3 & normal, const f64vec3 & view_direction) const -> std::optional<f64vec3>;
 
     inline auto get_average_diffuse_albedo() const -> f64
