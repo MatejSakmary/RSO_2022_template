@@ -32,10 +32,11 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
     if(key == GLFW_KEY_B && action == GLFW_PRESS)
     {
         std::cout << "raytracing scene - brdf sampling" << std::endl;
+        scene.use_env_map = true;
         raytracer.set_sample_ratio(0.0f);
         raytracer.trace_scene(&scene, {
-            .samples = 100,
-            .iterations = 10,
+            .samples = 80,
+            .iterations = 1,
             .method = TraceMethod::BRDF
         });
     }
@@ -109,10 +110,10 @@ Application::Application() :
     ),
     scene{create_default_scene()},
     raytracer{WINDOW_DIMENSIONS},
-    image_idx{10},
+    image_idx{0},
     show_env_map{false}
 { 
-    // load_env_map_image();
+    load_env_map_image();
 }
 
 Application::~Application()

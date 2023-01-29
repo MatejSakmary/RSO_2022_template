@@ -48,7 +48,7 @@ struct Raytracer
     Raytracer(const u32vec2 dimensions);
 
     void set_sample_ratio(f32 sample_ratio);
-    void trace_scene(const Scene * scene, const TraceInfo & info);
+    void trace_scene(Scene * scene, const TraceInfo & info);
 
     private:
         struct BouncedRayInfo
@@ -62,9 +62,10 @@ struct Raytracer
         f32 sample_ratio;
         u32vec2 dimensions;
         // TODO(msakmary) think of a way to store active scene better
-        const Scene * active_scene;
+        Scene * active_scene;
 
         auto ray_gen(const Ray & ray, const TraceInfo & info) -> Pixel;
         auto trace_ray(const Ray & ray) -> Intersect::HitInfo;
+        auto miss_ray(const Ray & ray) -> Pixel;
         auto bounced_ray(const GetBouncedRayInfo & info) const -> std::optional<BouncedRayInfo>;
 };

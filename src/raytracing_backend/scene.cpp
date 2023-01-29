@@ -25,10 +25,10 @@ void EnvironmentMap::init()
             int a = y * width;
             int b = a + x;
             int c = b * 3;
-            int idx = (y * width + x) * 3;
-            if(c != idx)
+            int idx_ = ((y * u32(width)) + x) * 3;
+            if(c != idx_)
             {
-                //std::cout << "(y * width + x) * 3 where y: " << y << " width: " << width << " x: " << x << " results in " << idx << std::endl;
+                std::cout << "(y * width + x) * 3 where y: " << y << " width: " << u32(width) << " x: " << x << " results in " << idx_ << std::endl;
             }
 
             lum_image.at(b) = ( 0.2126f * image.at(c) + 0.7152f * image.at(c + 1) + 0.0722f * image.at(c + 2)) * norm_factor;
@@ -38,41 +38,42 @@ void EnvironmentMap::init()
         col_prob.at(x) = total_col_intensity;
     }
 
-    for(int i = 0; i < 100000; i++)
-    {
-        float rand_col = get_random_double() * total_power;
-        float col_num = 0.0f;
-        float running = 0.0f;
-        for(size_t j = 0; j < col_prob.size(); j++ )
-        {
-            running += col_prob.at(j);
-            if(running > rand_col)
-            {
-                col_num = j;
-                break;
-            }
-        }
+    // for(int i = 0; i < 100000; i++)
+    // {
+    //     float rand_col = get_random_double() * total_power;
+    //     float col_num = 0.0f;
+    //     float running = 0.0f;
+    //     for(size_t j = 0; j < col_prob.size(); j++ )
+    //     {
+    //         running += col_prob.at(j);
+    //         if(running > rand_col)
+    //         {
+    //             col_num = j;
+    //             break;
+    //         }
+    //     }
 
-        float rand_row = get_random_double() * col_prob.at(col_num);
-        running = 0.0f;
-        for(size_t j = 0; j < height; j++)
-        {
-            running += lum_image.at(width * j + col_num);
-            if(running > rand_row)
-            {
+    //     float rand_row = get_random_double() * col_prob.at(col_num);
+    //     running = 0.0f;
+    //     for(size_t j = 0; j < height; j++)
+    //     {
+    //         running += lum_image.at(width * j + col_num);
+    //         if(running > rand_row)
+    //         {
 
-                image.at((j * width + col_num) * 3) = 1.0f;
-                heat_map.at(j * width + col_num) = 1.0f;
-                break;
-            }
-        }
-    }
+    //             image.at((j * width + col_num) * 3) = 1.0f;
+    //             heat_map.at(j * width + col_num) = 1.0f;
+    //             break;
+    //         }
+    //     }
+    // }
     std::cout << "Total power: " << total_power << std::endl;
 }
 
-Scene::Scene(const Camera & camera) : camera{camera}, total_power{0.0}
+Scene::Scene(const Camera & camera) : camera{camera}, total_power{0.0}, use_env_map{true}
 {
 }
+
 void Scene::calculate_total_power()
 {
     total_power = 0.0;

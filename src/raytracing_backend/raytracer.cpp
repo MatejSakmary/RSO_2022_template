@@ -1,5 +1,8 @@
 #include "raytracer.hpp"
 #include <omp.h>
+#include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtx/compatibility.hpp>
+#include <cmath>
 
 Raytracer::Raytracer(const u32vec2 dimensions) :
     result_image{dimensions.x * dimensions.y}, 
@@ -15,7 +18,7 @@ void Raytracer::set_sample_ratio(f32 sample_ratio)
     this->sample_ratio = sample_ratio;
 }
 
-void Raytracer::trace_scene(const Scene * scene, const TraceInfo & info)
+void Raytracer::trace_scene(Scene * scene, const TraceInfo & info)
 {
     omp_set_num_threads(omp_get_num_procs() * 2);
     active_scene = scene;
@@ -39,10 +42,34 @@ void Raytracer::trace_scene(const Scene * scene, const TraceInfo & info)
     std::cout << "scene trace done!" << std::endl;
 }
 
+
+auto Raytracer::miss_ray(const Ray & ray) -> Pixel
+{
+    // const f64vec3 rotated_direction = glm::rotateX(ray.direction, f64(glm::radians(180.0f)));
+    f64 theta = acos(ray.direction.z);
+    f64 phi = atan2(ray.direction.y, ray.direction.x);
+
+    if(phi < 0) { phi += 2.0f * M_PI; }
+
+    i32 u = phi/ (2 * M_PI) * u32(active_scene->env_map.width);
+    glm::clamp(u, 0, i32(active_scene->env_map.width - 1));
+
+    i32 v = theta/M_PI * u32(active_scene->env_map.height);
+    glm::clamp(v, 0, i32(active_scene->env_map.height - 1));
+
+    u32 coord = ( v * active_scene->env_map.width + u) * 3;
+
+    return {active_scene->env_map.image.at(coord),
+            active_scene->env_map.image.at(coord + 1),
+            active_scene->env_map.image.at(coord + 2)};
+}
+
 auto Raytracer::ray_gen(const Ray & ray, const TraceInfo & info) -> Pixel
 {
     auto hit = trace_ray(ray);
-    if(hit.hit_distance < 0.0) { return {0.0, 0.0, 0.0}; }
+    if(hit.hit_distance < 0.0) { 
+        return miss_ray(ray); 
+    }
 
     f64vec3 radiance_emitted = hit.material->Le;
     // if albedo is low no energy will be reflected return only energy emitted by the material
@@ -109,21 +136,45 @@ auto Raytracer::ray_gen(const Ray & ray, const TraceInfo & info) -> Pixel
         if(cos_theta_surface <= 0) { continue;}
 
         auto new_hit = trace_ray(outgoing_info.ray);
-        if(new_hit.hit_distance < EPSILON || new_hit.material->get_average_emmited_radiance() <= 0) { continue; }
+        if(new_hit.hit_distance == -1.0 && outgoing_info.brdf_sample_prob > 0.0f) 
+        {
+            if(!active_scene->use_env_map)
+            {
+                continue;
+            }
+            auto tmp = miss_ray(outgoing_info.ray);
+            new_hit.hit_position.x = tmp.R;
+            new_hit.hit_position.y = tmp.G;
+            new_hit.hit_position.z = tmp.B;
+            new_hit.normal = -outgoing_info.ray.direction;
+        } else if(new_hit.hit_distance < EPSILON || new_hit.material->get_average_emmited_radiance() <= 0) 
+        {
+            continue;
+        }
 
         f64 distance_square = new_hit.hit_distance * new_hit.hit_distance;
         f64 cos_theta_light = glm::dot(new_hit.normal, -outgoing_info.ray.direction);
 
         if(cos_theta_light <= EPSILON) { continue; }
 
-        const auto power_to_total_ratio = std::visit(GetPower{}, *new_hit.object) / active_scene->total_power;
-        f64 light_sample_prob = power_to_total_ratio / std::visit(PointSampleProbability{new_hit.hit_position}, *new_hit.object);
-        f64 pdf_light_source_sampling = light_sample_prob * distance_square / cos_theta_light;
         f64 pdf_brdf_sampling = outgoing_info.brdf_sample_prob;
+        f64vec3 f;
 
-        f64vec3 f = new_hit.material->Le * 
-                    hit.material->BRDF({ hit.normal, -ray.direction, outgoing_info.ray.direction }) *
-                    cos_theta_surface;
+        f64 pdf_light_source_sampling;
+
+        if(new_hit.hit_distance < EPSILON)
+        {
+            f = new_hit.hit_position * 
+                hit.material->BRDF({ hit.normal, -ray.direction, outgoing_info.ray.direction }) *
+                cos_theta_surface;
+        } else {
+            const auto power_to_total_ratio = std::visit(GetPower{}, *new_hit.object) / active_scene->total_power;
+            const f64 light_sample_prob = power_to_total_ratio / std::visit(PointSampleProbability{new_hit.hit_position}, *new_hit.object);
+            pdf_light_source_sampling = light_sample_prob * distance_square / cos_theta_light;
+            f = new_hit.material->Le * 
+                hit.material->BRDF({ hit.normal, -ray.direction, outgoing_info.ray.direction }) *
+                cos_theta_surface;
+        }
         if(info.method == TraceMethod::MULTI_IMPORTANCE_WEIGHTS)
         {
             radiance_emitted += f / (pdf_brdf_sampling + pdf_light_source_sampling) / static_cast<f64>(info.samples);
@@ -143,26 +194,33 @@ auto Raytracer::bounced_ray(const GetBouncedRayInfo & info) const -> std::option
         {
             f64 threshold = active_scene->total_power * get_random_double();
             f64 running_power = 0.0;
-            for(const auto & object : active_scene->scene_objects)
+            if(active_scene->use_env_map)
             {
-                running_power += std::visit(GetPower{}, object);
-                if(running_power > threshold)
+                return {};
+            } 
+            else 
+            {
+                for(const auto & object : active_scene->scene_objects)
                 {
-                    const auto light_sample = std::visit(VisiblePoint{info.hit.hit_position}, object );
-                    const auto power_to_total_ratio = std::visit(GetPower{}, object) / active_scene->total_power;
-                    const Ray bounced_ray = Ray(info.hit.hit_position + 0.01 * info.hit.normal, light_sample.sample - info.hit.hit_position);
+                    running_power += std::visit(GetPower{}, object);
+                    if(running_power > threshold)
+                    {
+                        const auto light_sample = std::visit(VisiblePoint{info.hit.hit_position}, object );
+                        const auto power_to_total_ratio = std::visit(GetPower{}, object) / active_scene->total_power;
+                        const Ray bounced_ray = Ray(info.hit.hit_position + 0.01 * info.hit.normal, light_sample.sample - info.hit.hit_position);
 
-                    const f64 brdf_probability = info.hit.material->sample_probability({
-                        .normal = info.hit.normal,
-                        .view_direction = -info.incoming_ray.direction,
-                        .light_direction = bounced_ray.direction
-                    });
+                        const f64 brdf_probability = info.hit.material->sample_probability({
+                            .normal = info.hit.normal,
+                            .view_direction = -info.incoming_ray.direction,
+                            .light_direction = bounced_ray.direction
+                        });
 
-                    return BouncedRayInfo{
-                        .ray = bounced_ray,
-                        .light_sample_prob = power_to_total_ratio / std::visit(PointSampleProbability{light_sample.sample}, object),
-                        .brdf_sample_prob = brdf_probability
-                    };
+                        return BouncedRayInfo{
+                            .ray = bounced_ray,
+                            .light_sample_prob = power_to_total_ratio / std::visit(PointSampleProbability{light_sample.sample}, object),
+                            .brdf_sample_prob = brdf_probability
+                        };
+                    }
                 }
             }
         }
@@ -211,6 +269,8 @@ auto Raytracer::trace_ray(const Ray & ray) -> Intersect::HitInfo
     for(const auto & object : active_scene->scene_objects)
     {
         Intersect::HitInfo hit = std::visit(Intersect{ray}, object);
+        if(active_scene->use_env_map == true && std::holds_alternative<Sphere>(object)) { continue; }
+
         if(hit.hit_distance < EPSILON) { continue; }
         if(closest_hit.hit_distance < 0.0 || hit.hit_distance < closest_hit.hit_distance)
         {

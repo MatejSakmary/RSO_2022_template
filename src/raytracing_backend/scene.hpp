@@ -29,6 +29,7 @@ struct Scene
     std::vector<Material> scene_materials;
 
     EnvironmentMap env_map;
+    bool use_env_map;
     Camera camera;
     f64 total_power;
 
