@@ -32,7 +32,7 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
 
         raytracer.set_sample_ratio(1.0f);
         raytracer.trace_scene(&scene, {
-            .samples = 200,
+            .samples = 500,
             .iterations = 10,
             .method = TraceMethod::LIGHT_SOURCE
         });
@@ -50,7 +50,7 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
 
         raytracer.set_sample_ratio(0.0f);
         raytracer.trace_scene(&scene, {
-            .samples = 200,
+            .samples = 500,
             .iterations = 10,
             .method = TraceMethod::BRDF
         });
@@ -68,7 +68,7 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
 
         raytracer.set_sample_ratio(0.5f);
         raytracer.trace_scene(&scene, {
-            .samples = 200,
+            .samples = 500,
             .iterations = 10,
             .method = TraceMethod::MULTI_IMPORTANCE
         });
@@ -86,7 +86,7 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
 
         raytracer.set_sample_ratio(0.5f);
         raytracer.trace_scene(&scene, {
-            .samples = 200,
+            .samples = 500,
             .iterations = 10,
             .method = TraceMethod::MULTI_IMPORTANCE_WEIGHTS
         });
