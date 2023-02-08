@@ -9,8 +9,8 @@ static std::uniform_real_distribution distribution = std::uniform_real_distribut
 
 f64 get_random_double()
 {
-    return (double)rand() / RAND_MAX;
-    // return distribution(engine);
+    // return (double)rand() / RAND_MAX;
+    return distribution(engine);
 }
 
 f64vec3 get_random_double_vec()
@@ -146,7 +146,7 @@ auto work_on_rgbe(std::vector<HDR_Pixel> & row, std::vector<float> & image) -> v
     }
 }
 
-auto load_hdr_image(const std::string & path, std::vector<float> & image, float & width, float & height) -> void
+auto load_hdr_image(const std::string & path, std::vector<float> & image, i32 & width, i32 & height) -> void
 {
     image.clear();
     char buff[200];

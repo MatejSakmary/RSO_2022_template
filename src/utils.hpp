@@ -10,4 +10,4 @@
 f64 get_random_double();
 f64vec3 get_random_double_vec();
 
-auto load_hdr_image(const std::string & path, std::vector<float> & image, float & width, float & height) -> void;
+auto load_hdr_image(const std::string & path, std::vector<float> & image, i32 & width, i32 & height) -> void;

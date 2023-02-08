@@ -5,6 +5,7 @@
 #include "scene.hpp"
 #include "types.hpp"
 
+
 enum TraceMethod
 {
     BRDF,
@@ -12,6 +13,23 @@ enum TraceMethod
     MULTI_IMPORTANCE,
     MULTI_IMPORTANCE_WEIGHTS
 };
+
+struct BouncedRayInfo
+{
+    Ray ray {{0.0, 0.0, 0.0} , {0.0, 0.0, 0.0}};
+    f64 light_sample_prob = 0.0;
+    f64 brdf_sample_prob = 0.0;
+};
+
+struct GetRayRadianceInfo
+{
+    BouncedRayInfo bounce_info;
+    Ray prev_ray;
+    Intersect::HitInfo prev_hit;
+    TraceMethod method;
+    TraceMethod bounce_gen_method;
+};
+
 
 struct GetBouncedRayInfo
 {
@@ -28,7 +46,6 @@ struct Raytracer
         u32 iterations = 10;
         TraceMethod method = LIGHT_SOURCE;
     };
-
 
     struct Pixel
     {
@@ -51,12 +68,6 @@ struct Raytracer
     void trace_scene(Scene * scene, const TraceInfo & info);
 
     private:
-        struct BouncedRayInfo
-        {
-            Ray ray {{0.0, 0.0, 0.0} , {0.0, 0.0, 0.0}};
-            f64 light_sample_prob = 0.0;
-            f64 brdf_sample_prob = 0.0;
-        };
 
         std::vector<Pixel> working_image;
         f32 sample_ratio;
@@ -66,6 +77,7 @@ struct Raytracer
 
         auto ray_gen(const Ray & ray, const TraceInfo & info) -> Pixel;
         auto trace_ray(const Ray & ray) -> Intersect::HitInfo;
-        auto miss_ray(const Ray & ray) -> Pixel;
+        auto miss_ray(const Ray & ray) -> f64vec3;
         auto bounced_ray(const GetBouncedRayInfo & info) const -> std::optional<BouncedRayInfo>;
+        auto get_ray_radiance(const GetRayRadianceInfo & info) -> f64vec3;
 };
