@@ -91,7 +91,7 @@ auto Raytracer::get_ray_radiance(const GetRayRadianceInfo & info) -> f64vec3
     f64 pdf_brdf_sampling = info.bounce_info.brdf_sample_prob;
     if(pdf_brdf_sampling == 0 && info.bounce_gen_method == TraceMethod::BRDF) { return {0.0, 0.0, 0.0}; }
 
-    f64 pdf_light_sampling = info.bounce_info.light_sample_prob * distance_square / cos_theta_light;
+    f64 pdf_light_sampling = info.bounce_info.light_sample_prob;// * distance_square / cos_theta_light;
     if(new_hit.hit_distance > EPSILON && info.method == TraceMethod::BRDF)
     {
         auto power_to_total_ratio = std::visit(GetPower{}, *new_hit.object) / active_scene->total_power;
@@ -214,7 +214,7 @@ auto Raytracer::bounced_ray(const GetBouncedRayInfo & info) const -> std::option
 
         if(active_scene->use_env_map)
         {
-            light_sample_prob = active_scene->env_map.sample_probability(bounced_ray.direction);
+            light_sample_prob = active_scene->env_map.sample_probability(bounced_ray.direction) * active_scene->env_map.width * active_scene->env_map.height;
         }
 
         return BouncedRayInfo{

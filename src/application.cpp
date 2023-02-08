@@ -25,7 +25,7 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
         scene.use_env_map = true;
         raytracer.set_sample_ratio(1.0f);
         raytracer.trace_scene(&scene, {
-            .samples = 100,
+            .samples = 2000,
             .iterations = 1,
             .method = TraceMethod::LIGHT_SOURCE
         });
@@ -36,7 +36,7 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
         scene.use_env_map = true;
         raytracer.set_sample_ratio(0.0f);
         raytracer.trace_scene(&scene, {
-            .samples = 80,
+            .samples = 2000,
             .iterations = 1,
             .method = TraceMethod::BRDF
         });
@@ -44,6 +44,7 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
     if(key == GLFW_KEY_M && action == GLFW_PRESS)
     {
         std::cout << "raytracing scene - multiimportance sampling" << std::endl;
+        scene.use_env_map = true;
         raytracer.set_sample_ratio(0.5f);
         raytracer.trace_scene(&scene, {
             .samples = 100,
@@ -54,9 +55,10 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
     if(key == GLFW_KEY_W && action == GLFW_PRESS)
     {
         std::cout << "raytracing scene - multiimportance weighed sampling" << std::endl;
+        scene.use_env_map = true;
         raytracer.set_sample_ratio(0.5f);
         raytracer.trace_scene(&scene, {
-            .samples = 100,
+            .samples = 2000,
             .iterations = 1,
             .method = TraceMethod::MULTI_IMPORTANCE_WEIGHTS
         });
@@ -68,12 +70,23 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
     }
     else if(key == GLFW_KEY_LEFT && action == GLFW_PRESS)
     {
-        image_idx = glm::min(11u, (image_idx - 1) % 11);
+        image_idx = glm::min(11u, u32(i32(image_idx - 1) % 11));
         load_env_map_image();
     }
     else if(key == GLFW_KEY_E && action == GLFW_PRESS)
     {
         show_env_map = !show_env_map;
+    }
+    else if(key == GLFW_KEY_S && action == GLFW_PRESS)
+    {
+        std::vector<f32> img(WINDOW_DIMENSIONS.x * WINDOW_DIMENSIONS.y * 3);
+        for(size_t i = 0; i < raytracer.result_image.size(); i++)
+        {
+            img.at(i * 3) = raytracer.result_image.at(i).R;
+            img.at(i * 3 + 1) = raytracer.result_image.at(i).G;
+            img.at(i * 3 + 2) = raytracer.result_image.at(i).B;
+        }
+        save_hdr_image("out.hdr", img, WINDOW_DIMENSIONS.x, WINDOW_DIMENSIONS.y );
     }
     return;
 }
@@ -168,10 +181,16 @@ Scene Application::create_default_scene()
 
     scene.scene_materials.emplace_back(mat_table_info);
     mat_table_info.shininess = 1000.0;
+    mat_table_info.diffuse_albedo = {0.7, 0.7, 0.7},
+    mat_table_info.specular_albedo = {0.3, 0.3, 0.3},
     scene.scene_materials.emplace_back(mat_table_info);
     mat_table_info.shininess = 5000.0;
+    mat_table_info.diffuse_albedo = {0.5, 0.5, 0.5},
+    mat_table_info.specular_albedo = {0.5, 0.5, 0.5},
     scene.scene_materials.emplace_back(mat_table_info);
     mat_table_info.shininess = 10000.0;
+    mat_table_info.diffuse_albedo = {0.2, 0.2, 0.2},
+    mat_table_info.specular_albedo = {0.8, 0.8, 0.8},
     scene.scene_materials.emplace_back(mat_table_info);
     f64vec3 light_center_pos = {0, 4, -6};
 

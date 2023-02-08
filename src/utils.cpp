@@ -7,6 +7,77 @@
 static std::mt19937 engine = std::mt19937(123);
 static std::uniform_real_distribution distribution = std::uniform_real_distribution<f64>(0.0, 1.0);
 
+auto save_hdr_image(const std::string & path, std::vector<float> & image, i32 width, i32 height) -> void
+{
+    auto fp = fopen(path.c_str(), "wb");
+    if (fp)
+    {
+        size_t nmemb = width * height;
+        typedef unsigned char RGBE[4];
+        RGBE *data = new RGBE[nmemb];
+        for (int ii = 0; ii < nmemb; ii++)
+        {
+            RGBE &rgbe = data[ii];
+            int x = (ii % width);
+            int y = height - (ii / width) + 1;
+            f32vec3 vv;
+            vv = reinterpret_cast<f32vec3*>(image.data())[y * height + x];
+            float v;
+            int e;
+            v = vv.x;
+            if (vv.y > v)
+                v = vv.y;
+            if (vv.z > v)
+                v = vv.z;
+            if (v < 1e-32)
+            {
+                rgbe[0] = rgbe[1] = rgbe[2] = rgbe[3] = 0x0;
+            }
+            else
+            {
+                v = (float)(frexp(v, &e) * 256.0 / v);
+                rgbe[0] = (unsigned char)(vv.x * v);
+                rgbe[1] = (unsigned char)(vv.y * v);
+                rgbe[2] = (unsigned char)(vv.z * v);
+                rgbe[3] = (unsigned char)(e + 128);
+            }
+        }
+        fflush(stdout);
+        const char *programtype = "RADIANCE";
+        if (fprintf(fp, "#?%s\n", programtype) < 0)
+        {
+            abort();
+        }
+        float gamma = 2.2;
+        float exposure = 1.0;
+        if (fprintf(fp, "GAMMA=%g\n", gamma) < 0)
+        {
+            abort();
+        }
+        if (fprintf(fp, "EXPOSURE=%g\n", exposure) < 0)
+        {
+            abort();
+        }
+        if (fprintf(fp, "FORMAT=32-bit_rle_rgbe\n\n") < 0)
+        {
+            abort();
+        }
+        if (fprintf(fp, "-Y %d +X %d\n", height, width) < 0)
+        {
+            abort();
+        }
+        // Write data
+        size_t kk = fwrite(data, (size_t)4, nmemb, fp);
+        fclose(fp);
+        if (kk != nmemb)
+        {
+            std::cout << "ERROR - was not able to save all kk= " << (int)nmemb << "entries to file, exiting" << std::endl;
+            fflush(stdout);
+            abort(); // error
+        }
+    }
+}
+
 f64 get_random_double()
 {
     // return (double)rand() / RAND_MAX;
