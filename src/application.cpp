@@ -22,7 +22,6 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
     if(key == GLFW_KEY_L && action == GLFW_PRESS)
     {
         std::cout << "raytracing scene - light sampling" << std::endl;
-        scene.use_env_map = true;
 
         filename = "lightsource_sampling";
         if(scene.use_env_map)
@@ -41,7 +40,6 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
     if(key == GLFW_KEY_B && action == GLFW_PRESS)
     {
         std::cout << "raytracing scene - brdf sampling" << std::endl;
-        scene.use_env_map = true;
 
         filename = "brdf_sampling";
         if(scene.use_env_map)
@@ -60,7 +58,6 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
     if(key == GLFW_KEY_M && action == GLFW_PRESS)
     {
         std::cout << "raytracing scene - multiimportance sampling" << std::endl;
-        scene.use_env_map = true;
 
         filename = "multiimportance_sampling";
         if(scene.use_env_map)
@@ -79,7 +76,6 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
     if(key == GLFW_KEY_W && action == GLFW_PRESS)
     {
         std::cout << "raytracing scene - multiimportance weighed sampling" << std::endl;
-        scene.use_env_map = true;
 
         filename = "multiimportance_weighed_sampling";
         if(scene.use_env_map)
@@ -107,7 +103,9 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
     }
     else if(key == GLFW_KEY_E && action == GLFW_PRESS)
     {
-        show_env_map = !show_env_map;
+        scene.use_env_map = !scene.use_env_map;
+        if(show_env_map) { std::cout << "Environment map is now on" << std::endl; }
+        else             { std::cout << "Environment map is now off" << std::endl; }
     }
     else if(key == GLFW_KEY_S && action == GLFW_PRESS)
     {
@@ -120,6 +118,7 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
         }
         if(filename.empty()) { std::cout << "ERROR could not write to file as no image was yet rendered" << std::endl;}
         save_hdr_image(std::string("results/" + filename).c_str(), img, WINDOW_DIMENSIONS.x, WINDOW_DIMENSIONS.y );
+        std::cout << "Image succesfully saved to results/" << filename << std::endl;
     }
     return;
 }

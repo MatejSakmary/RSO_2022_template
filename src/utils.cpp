@@ -255,7 +255,7 @@ auto load_hdr_image(const std::string & path, std::vector<float> & image, i32 & 
 #if defined(_WIN32)
     if(!sscanf_s(buff, "-Y %lld +X %lld", &size_y, &size_x))
 #else
-    if(!sscanf(buff, "-Y %lld +X %lld", &size_y, &size_x))
+    if(!sscanf(buff, "-Y %ld +X %ld", &size_y, &size_x))
 #endif
     {
         hdr_file.close();
