@@ -23,10 +23,18 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
     {
         std::cout << "raytracing scene - light sampling" << std::endl;
         scene.use_env_map = true;
+
+        filename = "lightsource_sampling";
+        if(scene.use_env_map)
+        {
+            filename += "_" + std::to_string(image_idx);
+        }
+        filename += ".hdr";
+
         raytracer.set_sample_ratio(1.0f);
         raytracer.trace_scene(&scene, {
-            .samples = 2000,
-            .iterations = 1,
+            .samples = 200,
+            .iterations = 10,
             .method = TraceMethod::LIGHT_SOURCE
         });
     }
@@ -34,10 +42,18 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
     {
         std::cout << "raytracing scene - brdf sampling" << std::endl;
         scene.use_env_map = true;
+
+        filename = "brdf_sampling";
+        if(scene.use_env_map)
+        {
+            filename += "_" + std::to_string(image_idx);
+        }
+        filename += ".hdr";
+
         raytracer.set_sample_ratio(0.0f);
         raytracer.trace_scene(&scene, {
-            .samples = 2000,
-            .iterations = 1,
+            .samples = 200,
+            .iterations = 10,
             .method = TraceMethod::BRDF
         });
     }
@@ -45,10 +61,18 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
     {
         std::cout << "raytracing scene - multiimportance sampling" << std::endl;
         scene.use_env_map = true;
+
+        filename = "multiimportance_sampling";
+        if(scene.use_env_map)
+        {
+            filename += "_" + std::to_string(image_idx);
+        }
+        filename += ".hdr";
+
         raytracer.set_sample_ratio(0.5f);
         raytracer.trace_scene(&scene, {
-            .samples = 100,
-            .iterations = 1,
+            .samples = 200,
+            .iterations = 10,
             .method = TraceMethod::MULTI_IMPORTANCE
         });
     }
@@ -56,10 +80,18 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
     {
         std::cout << "raytracing scene - multiimportance weighed sampling" << std::endl;
         scene.use_env_map = true;
+
+        filename = "multiimportance_weighed_sampling";
+        if(scene.use_env_map)
+        {
+            filename += "_" + std::to_string(image_idx);
+        }
+        filename += ".hdr";
+
         raytracer.set_sample_ratio(0.5f);
         raytracer.trace_scene(&scene, {
-            .samples = 2000,
-            .iterations = 1,
+            .samples = 200,
+            .iterations = 10,
             .method = TraceMethod::MULTI_IMPORTANCE_WEIGHTS
         });
     }
@@ -86,7 +118,8 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
             img.at(i * 3 + 1) = raytracer.result_image.at(i).G;
             img.at(i * 3 + 2) = raytracer.result_image.at(i).B;
         }
-        save_hdr_image("out.hdr", img, WINDOW_DIMENSIONS.x, WINDOW_DIMENSIONS.y );
+        if(filename.empty()) { std::cout << "ERROR could not write to file as no image was yet rendered" << std::endl;}
+        save_hdr_image(std::string("results/" + filename).c_str(), img, WINDOW_DIMENSIONS.x, WINDOW_DIMENSIONS.y );
     }
     return;
 }

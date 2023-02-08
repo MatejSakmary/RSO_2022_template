@@ -25,6 +25,7 @@ struct Application
         Raytracer raytracer;
 
         u32 image_idx;
+        std::string filename;
         bool show_env_map;
 
         void init_window();

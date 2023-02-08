@@ -9,7 +9,12 @@ static std::uniform_real_distribution distribution = std::uniform_real_distribut
 
 auto save_hdr_image(const std::string & path, std::vector<float> & image, i32 width, i32 height) -> void
 {
+#if defined(_WIN32)
+    FILE* fp;
+    auto err = fopen_s(&fp, path.c_str(), "wb");
+#else
     auto fp = fopen(path.c_str(), "wb");
+#endif
     if (fp)
     {
         size_t nmemb = width * height;
@@ -19,7 +24,7 @@ auto save_hdr_image(const std::string & path, std::vector<float> & image, i32 wi
         {
             RGBE &rgbe = data[ii];
             int x = (ii % width);
-            int y = height - (ii / width) + 1;
+            int y = height - (ii / width) - 1;
             f32vec3 vv;
             vv = reinterpret_cast<f32vec3*>(image.data())[y * height + x];
             float v;
@@ -247,7 +252,11 @@ auto load_hdr_image(const std::string & path, std::vector<float> & image, i32 & 
 
     i64 size_x;
     i64 size_y;
-    if(!sscanf(buff, "-Y %ld +X %ld", &size_y, &size_x))
+#if defined(_WIN32)
+    if(!sscanf_s(buff, "-Y %lld +X %lld", &size_y, &size_x))
+#else
+    if(!sscanf(buff, "-Y %lld +X %lld", &size_y, &size_x))
+#endif
     {
         hdr_file.close();
         throw std::runtime_error("[laod_hdr_image()] Invalid header info");

@@ -17,6 +17,10 @@
             "linux": {
                 "type": "lldb"
             },
+            "windows": {
+                "type": "cppvsdbg",
+                "console" : "externalTerminal"
+            }
         }
     ]
 }

@@ -3,6 +3,7 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/compatibility.hpp>
 #include <cmath>
+#include <thread>
 
 Raytracer::Raytracer(const u32vec2 dimensions) :
     result_image{dimensions.x * dimensions.y}, 
@@ -20,15 +21,13 @@ void Raytracer::set_sample_ratio(f32 sample_ratio)
 
 void Raytracer::trace_scene(Scene * scene, const TraceInfo & info)
 {
-    omp_set_num_threads(omp_get_num_procs() * 2);
-    active_scene = scene;
-    for(u32 iteration = 1; iteration <= info.iterations; iteration++)
+    const int num_threads = std::thread::hardware_concurrency() * 2;
+    std::vector<std::thread> threads;
+
+    auto task = [&](int start, int end, u32 iteration)
     {
-        std::cout << "Tracing iteration num: " << iteration << std::endl;
-        for(u32 y = 0; y < dimensions.y; y++)
+        for(int y = start; y < end; y++)
         {
-            std::cout << "progress " << u32((f32(y)/f32(dimensions.y)) * 100.0f) << "%\r" << std::flush; 
-            #pragma omp parallel for schedule(dynamic) 
             for(u32 x = 0; x < dimensions.x; x++)
             {
                 Pixel color = ray_gen(scene->camera.get_ray({x, y}, dimensions), info);
@@ -38,6 +37,31 @@ void Raytracer::trace_scene(Scene * scene, const TraceInfo & info)
                 result_image.at(y * dimensions.x + x) = color * weight + result_image.at(y * dimensions.x + x) * (1.0 - weight);
             }
         }
+    };
+
+    active_scene = scene;
+    threads.reserve(num_threads);
+    int chunk = dimensions.y / num_threads;
+    int remainder = dimensions.y % num_threads;
+
+    for(u32 iteration = 1; iteration <= info.iterations; iteration++)
+    {
+        std::cout << "Tracing iteration num: " << iteration << std::endl;
+        for(int i = 0; i < num_threads; i++)
+        {
+            if(i != num_threads - 1)
+            {
+                threads.push_back(std::thread(task, i * chunk, (i+1) * chunk, iteration));
+            } else
+            {
+                threads.push_back(std::thread(task, i * chunk, ((i+1) * chunk) + remainder, iteration));
+            }
+        }
+        for(int i = 0; i < num_threads; i++)
+        {
+            threads.at(i).join();
+        }
+        threads.clear();
     }
     std::cout << "scene trace done!" << std::endl;
 }
