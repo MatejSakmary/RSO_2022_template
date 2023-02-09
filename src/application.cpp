@@ -32,8 +32,8 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
 
         raytracer.set_sample_ratio(1.0f);
         raytracer.trace_scene(&scene, {
-            .samples = 100,
-            .iterations = 1,
+            .samples = 400,
+            .iterations = 10,
             .method = TraceMethod::LIGHT_SOURCE
         });
     }
