@@ -104,8 +104,8 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
     else if(key == GLFW_KEY_E && action == GLFW_PRESS)
     {
         scene.use_env_map = !scene.use_env_map;
-        if(show_env_map) { std::cout << "Environment map is now on" << std::endl; }
-        else             { std::cout << "Environment map is now off" << std::endl; }
+        if(scene.use_env_map) { std::cout << "Environment map is now on" << std::endl; }
+        else                  { std::cout << "Environment map is now off" << std::endl; }
     }
     else if(key == GLFW_KEY_S && action == GLFW_PRESS)
     {

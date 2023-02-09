@@ -26,7 +26,7 @@ auto save_hdr_image(const std::string & path, std::vector<float> & image, i32 wi
             int x = (ii % width);
             int y = height - (ii / width) - 1;
             f32vec3 vv;
-            vv = reinterpret_cast<f32vec3*>(image.data())[y * height + x];
+            vv = reinterpret_cast<f32vec3*>(image.data())[y * width + x];
             float v;
             int e;
             v = vv.x;

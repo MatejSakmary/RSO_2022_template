@@ -21,8 +21,8 @@ void Raytracer::set_sample_ratio(f32 sample_ratio)
 
 void Raytracer::trace_scene(Scene * scene, const TraceInfo & info)
 {
-    // const int num_threads = std::thread::hardware_concurrency() * 2;
-    const int num_threads = 1;
+    const int num_threads = std::thread::hardware_concurrency() * 2;
+    // const int num_threads = 1;
     std::vector<std::thread> threads;
 
     auto task = [&](int start, int end, u32 iteration)
@@ -172,7 +172,6 @@ auto Raytracer::ray_gen(const Ray & ray, const TraceInfo & info) -> Pixel
                 .method = TraceMethod::LIGHT_SOURCE,
                 .bounce_gen_method = TraceMethod::LIGHT_SOURCE
             });
-            // std::cout << "ray radiance " << ray_radiance.x << " " << ray_radiance.y << " " << ray_radiance.z << std::endl;
 
             // RUSSIAN RULETTE
             factor *= (hit.material->get_average_diffuse_albedo() + hit.material->get_average_specular_albedo()); 
@@ -192,7 +191,6 @@ auto Raytracer::ray_gen(const Ray & ray, const TraceInfo & info) -> Pixel
             if(new_hit.material->Le.x > EPSILON || new_hit.material->Le.y > EPSILON || new_hit.material->Le.z > EPSILON) { break; }
         }
         radiance_emitted += ray_radiance / static_cast<f64>(info.samples);
-        // std::cout << "radiance emitted " << radiance_emitted.x << " " << radiance_emitted.y << " " << radiance_emitted.z << std::endl;
     }
 
     return static_cast<Pixel>(radiance_emitted);
