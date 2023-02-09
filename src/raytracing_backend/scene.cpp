@@ -145,7 +145,7 @@ auto EnvironmentMap::sample_direction() -> f64vec3
     return out_dir;
 }
 
-Scene::Scene(const Camera & camera) : camera{camera}, total_power{0.0}, use_env_map{true}
+Scene::Scene(const Camera & camera) : camera{camera}, total_power{0.0}, use_env_map{false}
 {
 }
 

@@ -13,7 +13,7 @@
 struct Application
 {
     public:
-        const u32vec2 WINDOW_DIMENSIONS = {600, 600};
+        const u32vec2 WINDOW_DIMENSIONS = {1000, 1000};
         Application();
         ~Application();
 

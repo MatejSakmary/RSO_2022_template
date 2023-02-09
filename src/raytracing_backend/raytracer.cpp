@@ -21,7 +21,8 @@ void Raytracer::set_sample_ratio(f32 sample_ratio)
 
 void Raytracer::trace_scene(Scene * scene, const TraceInfo & info)
 {
-    const int num_threads = std::thread::hardware_concurrency() * 2;
+    // const int num_threads = std::thread::hardware_concurrency() * 2;
+    const int num_threads = 1;
     std::vector<std::thread> threads;
 
     auto task = [&](int start, int end, u32 iteration)
@@ -143,29 +144,55 @@ auto Raytracer::ray_gen(const Ray & ray, const TraceInfo & info) -> Pixel
     }
 
     f64vec3 radiance_emitted = hit.material->Le;
+    // We don't raytrace if we hit light
+    if(hit.material->Le.x > EPSILON || hit.material->Le.y > EPSILON || hit.material->Le.z > EPSILON) { return Pixel(radiance_emitted); }
+
     // if albedo is low no energy will be reflected return only energy emitted by the material
     if(hit.material->get_average_diffuse_albedo() < EPSILON && hit.material->get_average_specular_albedo() < EPSILON )
     {
         return Pixel(radiance_emitted);
     }
 
-    u64 brdf_sample_threshold = info.samples * sample_ratio;
     for(int i = 0; i < info.samples; i++)
     {
-        TraceMethod bounce_method = i < brdf_sample_threshold ? TraceMethod::LIGHT_SOURCE : TraceMethod::BRDF;
-        const auto bounce_info_opt = bounced_ray({.hit = hit, .incoming_ray = ray, .method = bounce_method});
+        auto new_hit = hit;
+        auto new_ray = ray;
+        f64vec3 ray_radiance = f64vec3(0.0f);
+        f64 factor = 1.0;
+        for(int i = 0; i < MAX_BOUNCES; i++)
+        {
+            const auto light_info_opt = bounced_ray({.hit = new_hit, .incoming_ray = ray, .method = TraceMethod::LIGHT_SOURCE});
 
-        if( !bounce_info_opt.has_value()) { continue; }
-        const auto bounce_info = bounce_info_opt.value();
+            const auto light_info = light_info_opt.value();
 
-        f64vec3 ray_radiance = get_ray_radiance({
-            .bounce_info = bounce_info,
-            .prev_ray = ray,
-            .prev_hit = hit,
-            .method = info.method,
-            .bounce_gen_method = bounce_method
-        });
+            ray_radiance += factor * get_ray_radiance({
+                .bounce_info = light_info,
+                .prev_ray = new_ray,
+                .prev_hit = new_hit,
+                .method = TraceMethod::LIGHT_SOURCE,
+                .bounce_gen_method = TraceMethod::LIGHT_SOURCE
+            });
+            // std::cout << "ray radiance " << ray_radiance.x << " " << ray_radiance.y << " " << ray_radiance.z << std::endl;
+
+            // RUSSIAN RULETTE
+            factor *= (hit.material->get_average_diffuse_albedo() + hit.material->get_average_specular_albedo()); 
+            if(get_random_double() > factor) { break; }
+
+            const auto bounce_info_opt = bounced_ray({.hit = hit, .incoming_ray = ray, .method = TraceMethod::BRDF});
+            if( !bounce_info_opt.has_value()) { break; }
+            const auto bounce_info = bounce_info_opt.value();
+
+            new_ray = bounce_info.ray;
+            new_hit = trace_ray(new_ray);
+            if(new_hit.hit_distance < EPSILON)
+            {
+                if(active_scene->use_env_map) { return Pixel(miss_ray(ray)); }
+                else { break; }
+            }
+            if(new_hit.material->Le.x > EPSILON || new_hit.material->Le.y > EPSILON || new_hit.material->Le.z > EPSILON) { break; }
+        }
         radiance_emitted += ray_radiance / static_cast<f64>(info.samples);
+        // std::cout << "radiance emitted " << radiance_emitted.x << " " << radiance_emitted.y << " " << radiance_emitted.z << std::endl;
     }
 
     return static_cast<Pixel>(radiance_emitted);

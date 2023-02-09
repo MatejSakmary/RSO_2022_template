@@ -32,8 +32,8 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
 
         raytracer.set_sample_ratio(1.0f);
         raytracer.trace_scene(&scene, {
-            .samples = 500,
-            .iterations = 10,
+            .samples = 100,
+            .iterations = 1,
             .method = TraceMethod::LIGHT_SOURCE
         });
     }
@@ -50,8 +50,8 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
 
         raytracer.set_sample_ratio(0.0f);
         raytracer.trace_scene(&scene, {
-            .samples = 500,
-            .iterations = 10,
+            .samples = 200,
+            .iterations = 2,
             .method = TraceMethod::BRDF
         });
     }
@@ -68,8 +68,8 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
 
         raytracer.set_sample_ratio(0.5f);
         raytracer.trace_scene(&scene, {
-            .samples = 500,
-            .iterations = 10,
+            .samples = 200,
+            .iterations = 2,
             .method = TraceMethod::MULTI_IMPORTANCE
         });
     }
@@ -86,8 +86,8 @@ void Application::key_callback(i32 key, i32 code, i32 action, i32 mods)
 
         raytracer.set_sample_ratio(0.5f);
         raytracer.trace_scene(&scene, {
-            .samples = 500,
-            .iterations = 10,
+            .samples = 200,
+            .iterations = 2,
             .method = TraceMethod::MULTI_IMPORTANCE_WEIGHTS
         });
     }
@@ -181,7 +181,7 @@ void Application::load_env_map_image()
 Scene Application::create_default_scene()
 {
     Scene scene = Scene(Camera::CameraInfo{
-        .origin = {0.0, 6.0, 18.0},
+        .origin = {0.0, 10.0, -20.0},
         .look_at = {0.0, 0.0, 0.0},
         .up = {0.0, 1.0, 0.0},
         .fov = 35.0 * M_PI / 180.0
@@ -189,8 +189,15 @@ Scene Application::create_default_scene()
 
     Material::MaterialCreateInfo mat_table_info = {
         .Le = {0.0, 0.0, 0.0},
-        .diffuse_albedo = {0.8, 0.8, 0.8},
-        .specular_albedo = {0.2, 0.2, 0.2},
+        .diffuse_albedo = {0.5, 0.5, 0.5},
+        .specular_albedo = {0.1, 0.1, 0.1},
+        .shininess = 10.0
+    };
+
+    Material::MaterialCreateInfo mat_sphere_info = {
+        .Le = {0.0, 0.0, 0.0},
+        .diffuse_albedo = {0.1, 0.1, 0.1},
+        .specular_albedo = {0.4, 0.4, 0.4},
         .shininess = 500.0
     };
 
@@ -202,72 +209,48 @@ Scene Application::create_default_scene()
     };
 
     scene.scene_materials.reserve(8);
-    mat_light_base_info.Le = {531.715, 265.857, 132.929};
+    mat_light_base_info.Le = f64vec3{3.0, 2.0, 5.0027} * 5.0;
     scene.scene_materials.emplace_back(mat_light_base_info);
-    mat_light_base_info.Le = {50.8868, 101.774, 25.4434};
-    scene.scene_materials.emplace_back(mat_light_base_info);
-    mat_light_base_info.Le = {8.14188, 4.07094, 16.2838};
-    scene.scene_materials.emplace_back(mat_light_base_info);
-    mat_light_base_info.Le = {2.6054, 0.65135, 1.3027};
+    mat_light_base_info.Le = f64vec3{5.0, 1.0, 3.0027} * 5.0;
     scene.scene_materials.emplace_back(mat_light_base_info);
 
     scene.scene_materials.emplace_back(mat_table_info);
+
+    scene.scene_materials.emplace_back(mat_sphere_info);
     mat_table_info.shininess = 1000.0;
-    mat_table_info.diffuse_albedo = {0.7, 0.7, 0.7},
-    mat_table_info.specular_albedo = {0.3, 0.3, 0.3},
-    scene.scene_materials.emplace_back(mat_table_info);
-    mat_table_info.shininess = 5000.0;
-    mat_table_info.diffuse_albedo = {0.5, 0.5, 0.5},
-    mat_table_info.specular_albedo = {0.5, 0.5, 0.5},
-    scene.scene_materials.emplace_back(mat_table_info);
+    scene.scene_materials.emplace_back(mat_sphere_info);
     mat_table_info.shininess = 10000.0;
-    mat_table_info.diffuse_albedo = {0.2, 0.2, 0.2},
-    mat_table_info.specular_albedo = {0.8, 0.8, 0.8},
-    scene.scene_materials.emplace_back(mat_table_info);
-    f64vec3 light_center_pos = {0, 4, -6};
-
-    scene.scene_objects.emplace_back(Rectangle({ 
-        .material = &scene.scene_materials.at(4),
-        .origin = {0.0, -4.0,  2.0 },
-        .normal = {0.0, 0.9935, 0.1131},
-        .dimensions = {8.0, 1.0}}));
-
-    scene.scene_objects.emplace_back(Rectangle({ 
-        .material = &scene.scene_materials.at(5),
-        .origin = {0.0, -3.5, -2.0},
-        .normal = {0.0, 0.9496, 0.3133},
-        .dimensions = {8.0, 1.0}}));
-
-    scene.scene_objects.emplace_back(Rectangle({
-        .material = &scene.scene_materials.at(6),
-        .origin = {0.0, -2.5, -6.0},
-        .normal = {0.0, 0.8166, 0.5751},
-        .dimensions = {8.0, 1.0}}));
-
-    scene.scene_objects.emplace_back(Rectangle({
-        .material = &scene.scene_materials.at(7),
-        .origin = {0.0, -1.0, -10.0},
-        .normal = {0.0, 0.5400, 0.8416},
-        .dimensions = {8.0, 1.0}}));
+    scene.scene_materials.emplace_back(mat_sphere_info);
 
     scene.scene_objects.emplace_back(Sphere({
         .material = &scene.scene_materials.at(0), 
-        .origin = light_center_pos + f64vec3{-4.5, 0.0, 0.0},
-        .radius = 0.07}));
+        .origin = f64vec3{ 3.0, 5.0, 3.0},
+        .radius = 1.0}));
 
     scene.scene_objects.emplace_back(Sphere({
-        .material = &scene.scene_materials.at(1),
-        .origin = light_center_pos + f64vec3{-1.5, 0.0, 0.0},
-        .radius = 0.16}));
+        .material = &scene.scene_materials.at(1), 
+        .origin = f64vec3{ -5.0, 2.0, -3.0},
+        .radius = 1.0}));
 
-    scene.scene_objects.emplace_back(Sphere({
+    scene.scene_objects.emplace_back(Rectangle({ 
         .material = &scene.scene_materials.at(2),
-        .origin = light_center_pos + f64vec3{ 1.5, 0.0, 0.0},
-        .radius = 0.4}));
+        .origin = {0.0, -1.0,  0.0 },
+        .normal = {0.0, 1.0, 0.0},
+        .dimensions = {20.0, 20.0}}));
 
     scene.scene_objects.emplace_back(Sphere({
         .material = &scene.scene_materials.at(3), 
-        .origin = light_center_pos + f64vec3{ 4.5, 0.0, 0.0},
+        .origin = f64vec3{ 2.0, 0.0, 0.0},
+        .radius = 1.0}));
+
+    scene.scene_objects.emplace_back(Sphere({
+        .material = &scene.scene_materials.at(4), 
+        .origin = f64vec3{ -2.0, 0.0, 0.0},
+        .radius = 1.0}));
+
+    scene.scene_objects.emplace_back(Sphere({
+        .material = &scene.scene_materials.at(5), 
+        .origin = f64vec3{ 0.0, 0.0, 2.0},
         .radius = 1.0}));
 
     scene.calculate_total_power();

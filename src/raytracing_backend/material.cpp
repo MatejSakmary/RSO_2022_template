@@ -77,7 +77,7 @@ auto Material::sample_direction(const f64vec3 & normal, const f64vec3 & view_dir
         L = T * x + B * y + normal * z;
 
         f64 cos_theta = glm::dot(normal, L);
-        if(cos_theta >= 0.0f) { return L; }
+        if(cos_theta >= EPSILON) { return L; }
         else { return std::nullopt; }
     }
     else if(e1 < avg_diffuse_albedo + avg_specular_albedo)
@@ -97,7 +97,7 @@ auto Material::sample_direction(const f64vec3 & normal, const f64vec3 & view_dir
         L = T * x + B * y + R * z;
 
         f64 cos_theta = glm::dot(normal, L);
-        if(cos_theta >= 0.0f) { return L; }
+        if(cos_theta >= EPSILON) { return L; }
         else { return std::nullopt; }
     }
     return std::nullopt; // error - no value

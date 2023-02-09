@@ -68,7 +68,7 @@ struct Raytracer
     void trace_scene(Scene * scene, const TraceInfo & info);
 
     private:
-
+        const u32 MAX_BOUNCES = 20;
         std::vector<Pixel> working_image;
         f32 sample_ratio;
         u32vec2 dimensions;
